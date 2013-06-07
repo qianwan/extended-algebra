@@ -10,88 +10,92 @@ import com.beust.jcommander.internal.Maps;
 import no.uib.cipr.matrix.DenseMatrix;
 
 public abstract class Entity implements MIMOChannel {
-    Logger logger = Logger.getLogger(Entity.class);
-    
-    private double x;
+	Logger logger = Logger.getLogger(Entity.class);
 
-    private double y;
-    
-    private int numAntennas;
-    
-    protected Map<Entity, DenseMatrix> mimoChannels = Maps.newHashMap();
+	private double x;
 
-    public enum Type {
-        BS, UE, UNKNOWN
-    };
-    
-    Type t = Type.UNKNOWN;
+	private double y;
 
-    public Entity() {
-        this(0, 0, Type.UNKNOWN, 1);
-    }
+	private int numAntennas;
 
-    public Entity(double x, double y) {
-        this(x, y, Type.UNKNOWN, 1);
-    }
-    
-    public Entity(double x, double y, Type t) {
-        this(x, y, t, 1);
-    }
-    
-    public Entity(double x, double y, Type t, int numAntennas) {
-        setXY(x, y);
-        this.t = t;
-        this.numAntennas = numAntennas;
-    }
+	protected Map<Entity, DenseMatrix> mimoChannels = Maps.newHashMap();
 
-    public void setXY(double x, double y) {
-        this.x = x;
-        this.y = y;
-    }
+	public enum Type {
+		BS, UE, UNKNOWN
+	};
 
-    public double[] getXY() {
-        return new double[] { x, y };
-    }
+	Type t = Type.UNKNOWN;
 
-    public void setNumAntennas(int numAntennas) {
-        this.numAntennas = numAntennas;
-    }
-    
-    public int getNumAntennas() {
-        return this.numAntennas;
-    }
-    
-    public Type getType() {
-        return this.t;
-    }
-    
-    public void setType(Type t) {
-        this.t = t;
-    }
-    
-    public DenseMatrix generateMIMOChannel(Entity e) {
-        Assert.assertFalse(e.getType()==this.getType());
-        DenseMatrix H = new DenseMatrix(e.getNumAntennas(), this.getNumAntennas());
-        // TODO rayleigh channel
-        
-        mimoChannels.put(e, H);
-        return H;
-    }
-    
-    public DenseMatrix getMIMOChannel(Entity e) {
-        DenseMatrix H = mimoChannels.get(e);
-        if (H==null) {
-            H = this.generateMIMOChannel(e);
-            mimoChannels.put(e, H);
-        }
-        return H;
-    }
-    
-    public void setMIMOChannel(Entity e, DenseMatrix H) {
-        Assert.assertFalse(e.getType()==this.getType());
-        if (H.numRows()!=e.getNumAntennas() || H.numColumns()!=this.getNumAntennas()) {
-            logger.error("MIMO channel not compatible with number of antennas of entities", new Exception());
-        }
-        mimoChannels.put(e, H);
-    }
+	public Entity() {
+		this(0, 0, Type.UNKNOWN, 1);
+	}
+
+	public Entity(double x, double y) {
+		this(x, y, Type.UNKNOWN, 1);
+	}
+
+	public Entity(double x, double y, Type t) {
+		this(x, y, t, 1);
+	}
+
+	public Entity(double x, double y, Type t, int numAntennas) {
+		setXY(x, y);
+		this.t = t;
+		this.numAntennas = numAntennas;
+	}
+
+	public void setXY(double x, double y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public double[] getXY() {
+		return new double[] { x, y };
+	}
+
+	public void setNumAntennas(int numAntennas) {
+		this.numAntennas = numAntennas;
+	}
+
+	public int getNumAntennas() {
+		return this.numAntennas;
+	}
+
+	public Type getType() {
+		return this.t;
+	}
+
+	public void setType(Type t) {
+		this.t = t;
+	}
+
+	public DenseMatrix generateMIMOChannel(Entity e) {
+		Assert.assertFalse(e.getType() == this.getType());
+		DenseMatrix H = new DenseMatrix(e.getNumAntennas(),
+				this.getNumAntennas());
+		// TODO rayleigh channel
+
+		mimoChannels.put(e, H);
+		return H;
+	}
+
+	public DenseMatrix getMIMOChannel(Entity e) {
+		DenseMatrix H = mimoChannels.get(e);
+		if (H == null) {
+			H = this.generateMIMOChannel(e);
+			mimoChannels.put(e, H);
+		}
+		return H;
+	}
+
+	public void setMIMOChannel(Entity e, DenseMatrix H) {
+		Assert.assertFalse(e.getType() == this.getType());
+		if (H.numRows() != e.getNumAntennas()
+				|| H.numColumns() != this.getNumAntennas()) {
+			logger.error(
+					"MIMO channel not compatible with number of antennas of entities",
+					new Exception());
+		}
+		mimoChannels.put(e, H);
+	}
 }
