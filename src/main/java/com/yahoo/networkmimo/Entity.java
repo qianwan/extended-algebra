@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 
 import com.beust.jcommander.internal.Maps;
+import com.yahoo.algebra.matrix.DenseComplexMatrix;
 
 import no.uib.cipr.matrix.DenseMatrix;
 
@@ -18,7 +19,7 @@ public abstract class Entity implements MIMOChannel {
 
 	private int numAntennas;
 
-	protected Map<Entity, DenseMatrix> mimoChannels = Maps.newHashMap();
+	protected Map<Entity, DenseComplexMatrix> mimoChannels = Maps.newHashMap();
 
 	public enum Type {
 		BS, UE, UNKNOWN
@@ -69,9 +70,9 @@ public abstract class Entity implements MIMOChannel {
 		this.t = t;
 	}
 
-	public DenseMatrix generateMIMOChannel(Entity e) {
+	public DenseComplexMatrix generateMIMOChannel(Entity e) {
 		Assert.assertFalse(e.getType() == this.getType());
-		DenseMatrix H = new DenseMatrix(e.getNumAntennas(),
+		DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(),
 				this.getNumAntennas());
 		// TODO rayleigh channel
 
@@ -79,8 +80,8 @@ public abstract class Entity implements MIMOChannel {
 		return H;
 	}
 
-	public DenseMatrix getMIMOChannel(Entity e) {
-		DenseMatrix H = mimoChannels.get(e);
+	public DenseComplexMatrix getMIMOChannel(Entity e) {
+		DenseComplexMatrix H = mimoChannels.get(e);
 		if (H == null) {
 			H = this.generateMIMOChannel(e);
 			mimoChannels.put(e, H);
@@ -88,7 +89,7 @@ public abstract class Entity implements MIMOChannel {
 		return H;
 	}
 
-	public void setMIMOChannel(Entity e, DenseMatrix H) {
+	public void setMIMOChannel(Entity e, DenseComplexMatrix H) {
 		Assert.assertFalse(e.getType() == this.getType());
 		if (H.numRows() != e.getNumAntennas()
 				|| H.numColumns() != this.getNumAntennas()) {
