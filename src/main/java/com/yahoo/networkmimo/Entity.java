@@ -8,8 +8,6 @@ import org.junit.Assert;
 import com.beust.jcommander.internal.Maps;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 
-import no.uib.cipr.matrix.DenseMatrix;
-
 public abstract class Entity implements MIMOChannel {
 	Logger logger = Logger.getLogger(Entity.class);
 

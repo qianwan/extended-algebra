@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Formatter;
 import java.util.Iterator;
 
+@SuppressWarnings("serial")
 public abstract class AbstractComplexVector implements ComplexVector, Serializable{
 	/**
      * Size of the ComplexVector

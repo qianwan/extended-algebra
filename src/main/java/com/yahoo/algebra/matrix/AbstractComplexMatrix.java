@@ -747,6 +747,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     @Override
     public String toString() {
         // Output into coordinate format. Indices start from 1 instead of 0
+        @SuppressWarnings("resource")
         Formatter out = new Formatter();
 
         out.format("%10d %10d %19d\n", numRows, numColumns, ComplexMatrices

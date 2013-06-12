@@ -3,9 +3,6 @@ package com.yahoo.algebra.matrix;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.Vector;
-
 public class DenseComplexVector extends AbstractComplexVector implements Serializable {
 
     /** just the private data */
