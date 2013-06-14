@@ -62,6 +62,20 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
     public double[] getData() {
         return data;
     }
+    
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<numRows(); i++) {
+            for (int j=0; j<numColumns(); j++) {
+                sb.append(String.format("%6.4g", get(i, j)[0]));
+                sb.append(String.format("%+6.4gj\t", get(i, j)[1]));
+            }
+            if (i!=numRows()-1) {
+                sb.append("\n");
+            }
+        }
+        return sb.toString().trim();
+    }
 
     @Override
     public void add(int row, int column, double value[]) {

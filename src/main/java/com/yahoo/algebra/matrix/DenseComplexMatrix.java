@@ -133,8 +133,15 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
 
     @Override
     void copy(ComplexMatrix A) {
-        for (ComplexMatrixEntry e : A)
-            set(e.row(), e.column(), e.get());
+        if (A instanceof DenseComplexMatrix) {
+            double []data_ = ((DenseComplexMatrix) A).getData();
+            for (int i=0; i<data.length; i++) {
+                data[i] = data_[i];
+            }
+        } else {
+            for (ComplexMatrixEntry e : A)
+                set(e.row(), e.column(), e.get());
+        }
     }
 
     /**

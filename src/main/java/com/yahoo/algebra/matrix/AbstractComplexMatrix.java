@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
+    private static double equalThreshold = 1e-6;
     /**
      * Number of rows
      */
@@ -32,6 +33,23 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected AbstractComplexMatrix(ComplexMatrix A) {
         this(A.numRows(), A.numColumns());
+    }
+    
+    public boolean equals(AbstractComplexMatrix A) {
+        if (this==A) return true;
+        else {
+            if (numRows()!=A.numRows() || numColumns()!=A.numColumns()) {
+                return false;
+            }
+            for (ComplexMatrixEntry e : this) {
+                double []v  = e.get();
+                double []vc = A.get(e.row(), e.column());
+                if (Math.abs(v[0]-vc[0])>equalThreshold || Math.abs(v[1]-vc[1])>equalThreshold) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     public int numRows() {
