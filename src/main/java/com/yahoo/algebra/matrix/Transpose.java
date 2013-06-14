@@ -9,7 +9,8 @@ enum Transpose {
     Transpose;
 
     /**
-     * @return the netlib character version of this designation, for use with F2J.
+     * @return the netlib character version of this designation, for use with
+     *         F2J.
      */
     public String netlib() {
         if (this == NoTranspose)

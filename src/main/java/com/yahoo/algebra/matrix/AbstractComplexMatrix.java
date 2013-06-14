@@ -21,30 +21,31 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected AbstractComplexMatrix(int numRows, int numColumns) {
         if (numRows < 0 || numColumns < 0)
-            throw new IndexOutOfBoundsException(
-                    "Matrix size cannot be negative");
+            throw new IndexOutOfBoundsException("Matrix size cannot be negative");
         this.numRows = numRows;
         this.numColumns = numColumns;
     }
 
     /**
-     * Constructor for AbstractComplexMatrix, same size as A. The invoking constructor
-     * should set this matrix equal the argument matrix
+     * Constructor for AbstractComplexMatrix, same size as A. The invoking
+     * constructor should set this matrix equal the argument matrix
      */
     protected AbstractComplexMatrix(ComplexMatrix A) {
         this(A.numRows(), A.numColumns());
     }
-    
+
     public boolean equals(AbstractComplexMatrix A) {
-        if (this==A) return true;
+        if (this == A)
+            return true;
         else {
-            if (numRows()!=A.numRows() || numColumns()!=A.numColumns()) {
+            if (numRows() != A.numRows() || numColumns() != A.numColumns()) {
                 return false;
             }
             for (ComplexMatrixEntry e : this) {
-                double []v  = e.get();
-                double []vc = A.get(e.row(), e.column());
-                if (Math.abs(v[0]-vc[0])>equalThreshold || Math.abs(v[1]-vc[1])>equalThreshold) {
+                double[] v = e.get();
+                double[] vc = A.get(e.row(), e.column());
+                if (Math.abs(v[0] - vc[0]) > equalThreshold
+                        || Math.abs(v[1] - vc[1]) > equalThreshold) {
                     return false;
                 }
             }
@@ -70,7 +71,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
     public void add(int row, int column, double value[]) {
         double[] adder = get(row, column);
-        set(row, column, new double[]{value[0]+adder[0], value[1]+adder[1]});
+        set(row, column, new double[] { value[0] + adder[0], value[1] + adder[1] });
     }
 
     public double[] get(int row, int column) {
@@ -82,17 +83,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void check(int row, int column) {
         if (row < 0)
-            throw new IndexOutOfBoundsException("row index is negative (" + row
-                    + ")");
+            throw new IndexOutOfBoundsException("row index is negative (" + row + ")");
         if (column < 0)
-            throw new IndexOutOfBoundsException("column index is negative ("
-                    + column + ")");
+            throw new IndexOutOfBoundsException("column index is negative (" + column + ")");
         if (row >= numRows)
-            throw new IndexOutOfBoundsException("row index >= numRows (" + row
-                    + " >= " + numRows + ")");
+            throw new IndexOutOfBoundsException("row index >= numRows (" + row + " >= " + numRows
+                    + ")");
         if (column >= numColumns)
-            throw new IndexOutOfBoundsException("column index >= numColumns ("
-                    + column + " >= " + numColumns + ")");
+            throw new IndexOutOfBoundsException("column index >= numColumns (" + column + " >= "
+                    + numColumns + ")");
     }
 
     public ComplexMatrix copy() {
@@ -101,12 +100,12 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
     public ComplexMatrix zero() {
         for (ComplexMatrixEntry e : this)
-            e.set(new double[]{0, 0});
+            e.set(new double[] { 0, 0 });
         return this;
     }
 
     public ComplexVector mult(ComplexVector x, ComplexVector y) {
-        return mult(new double[]{1, 0}, x, y);
+        return mult(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexVector mult(double alpha[], ComplexVector x, ComplexVector y) {
@@ -114,7 +113,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexVector multAdd(ComplexVector x, ComplexVector y) {
-        return multAdd(new double[]{1, 0}, x, y);
+        return multAdd(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexVector multAdd(double alpha[], ComplexVector x, ComplexVector y) {
@@ -134,15 +133,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkMultAdd(ComplexVector x, ComplexVector y) {
         if (numColumns != x.size())
-            throw new IndexOutOfBoundsException("A.numColumns != x.size ("
-                    + numColumns + " != " + x.size() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != x.size (" + numColumns + " != "
+                    + x.size() + ")");
         if (numRows != y.size())
-            throw new IndexOutOfBoundsException("A.numRows != y.size ("
-                    + numRows + " != " + y.size() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != y.size (" + numRows + " != "
+                    + y.size() + ")");
     }
 
     public ComplexVector transMult(ComplexVector x, ComplexVector y) {
-        return transMult(new double[]{1, 0}, x, y);
+        return transMult(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexVector transMult(double alpha[], ComplexVector x, ComplexVector y) {
@@ -150,7 +149,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexVector transMultAdd(ComplexVector x, ComplexVector y) {
-        return transMultAdd(new double[]{1, 0}, x, y);
+        return transMultAdd(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexVector transMultAdd(double alpha[], ComplexVector x, ComplexVector y) {
@@ -169,11 +168,11 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkTransMultAdd(ComplexVector x, ComplexVector y) {
         if (numRows != x.size())
-            throw new IndexOutOfBoundsException("A.numRows != x.size ("
-                    + numRows + " != " + x.size() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != x.size (" + numRows + " != "
+                    + x.size() + ")");
         if (numColumns != y.size())
-            throw new IndexOutOfBoundsException("A.numColumns != y.size ("
-                    + numColumns + " != " + y.size() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != y.size (" + numColumns + " != "
+                    + y.size() + ")");
     }
 
     public ComplexVector solve(ComplexVector b, ComplexVector x) {
@@ -192,15 +191,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (numRows != b.size())
-            throw new IndexOutOfBoundsException("numRows != b.size (" + numRows
-                    + " != " + b.size() + ")");
+            throw new IndexOutOfBoundsException("numRows != b.size (" + numRows + " != " + b.size()
+                    + ")");
         if (numColumns != x.size())
-            throw new IndexOutOfBoundsException("numColumns != x.size ("
-                    + numColumns + " != " + x.size() + ")");
+            throw new IndexOutOfBoundsException("numColumns != x.size (" + numColumns + " != "
+                    + x.size() + ")");
     }
 
     public ComplexMatrix rank1(ComplexVector x) {
-        return rank1(new double[]{1, 0}, x);
+        return rank1(new double[] { 1, 0 }, x);
     }
 
     public ComplexMatrix rank1(double alpha[], ComplexVector x) {
@@ -208,7 +207,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix rank1(ComplexVector x, ComplexVector y) {
-        return rank1(new double[]{1, 0}, x, y);
+        return rank1(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexMatrix rank1(double alpha[], ComplexVector x, ComplexVector y) {
@@ -235,15 +234,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (x.size() != numRows)
-            throw new IndexOutOfBoundsException("x.size != A.numRows ("
-                    + x.size() + " != " + numRows + ")");
+            throw new IndexOutOfBoundsException("x.size != A.numRows (" + x.size() + " != "
+                    + numRows + ")");
         if (y.size() != numColumns)
-            throw new IndexOutOfBoundsException("y.size != A.numColumns ("
-                    + y.size() + " != " + numColumns + ")");
+            throw new IndexOutOfBoundsException("y.size != A.numColumns (" + y.size() + " != "
+                    + numColumns + ")");
     }
 
     public ComplexMatrix rank2(ComplexVector x, ComplexVector y) {
-        return rank2(new double[]{1, 0}, x, y);
+        return rank2(new double[] { 1, 0 }, x, y);
     }
 
     public ComplexMatrix rank2(double alpha[], ComplexVector x, ComplexVector y) {
@@ -270,15 +269,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (x.size() != numRows)
-            throw new IndexOutOfBoundsException("x.size != A.numRows ("
-                    + x.size() + " != " + numRows + ")");
+            throw new IndexOutOfBoundsException("x.size != A.numRows (" + x.size() + " != "
+                    + numRows + ")");
         if (y.size() != numRows)
-            throw new IndexOutOfBoundsException("y.size != A.numRows ("
-                    + y.size() + " != " + numRows + ")");
+            throw new IndexOutOfBoundsException("y.size != A.numRows (" + y.size() + " != "
+                    + numRows + ")");
     }
 
     public ComplexMatrix mult(ComplexMatrix B, ComplexMatrix C) {
-        return mult(new double[]{1, 0}, B, C);
+        return mult(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix mult(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -286,7 +285,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix multAdd(ComplexMatrix B, ComplexMatrix C) {
-        return multAdd(new double[]{1, 0}, B, C);
+        return multAdd(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix multAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -295,7 +294,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (alpha[0] != 0 && alpha[1] != 0)
             for (int i = 0; i < numRows; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
-                    double[] dot = new double[]{0, 0};
+                    double[] dot = new double[] { 0, 0 };
                     for (int k = 0; k < numColumns; ++k) {
                         dot = Complexes.add(dot, Complexes.mult(get(i, k), B.get(k, j)));
                     }
@@ -310,19 +309,18 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkMultAdd(ComplexMatrix B, ComplexMatrix C) {
         if (numRows != C.numRows())
-            throw new IndexOutOfBoundsException("A.numRows != C.numRows ("
-                    + numRows + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != C.numRows (" + numRows + " != "
+                    + C.numRows() + ")");
         if (numColumns != B.numRows())
-            throw new IndexOutOfBoundsException("A.numColumns != B.numRows ("
-                    + numColumns + " != " + B.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != B.numRows (" + numColumns + " != "
+                    + B.numRows() + ")");
         if (B.numColumns() != C.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "B.numColumns != C.numColumns (" + B.numRows() + " != "
-                            + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numColumns != C.numColumns (" + B.numRows()
+                    + " != " + C.numColumns() + ")");
     }
 
     public ComplexMatrix transAmult(ComplexMatrix B, ComplexMatrix C) {
-        return transAmult(new double[]{1, 0}, B, C);
+        return transAmult(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transAmult(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -330,7 +328,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix transAmultAdd(ComplexMatrix B, ComplexMatrix C) {
-        return transAmultAdd(new double[]{1, 0}, B, C);
+        return transAmultAdd(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transAmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -339,7 +337,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (alpha[0] != 0 && alpha[1] != 0)
             for (int i = 0; i < numColumns; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
-                    double[] dot = new double[]{0, 0};
+                    double[] dot = new double[] { 0, 0 };
                     for (int k = 0; k < numRows; ++k)
                         dot = Complexes.add(dot, Complexes.mult(get(k, i), B.get(k, j)));
                     C.add(i, j, Complexes.mult(alpha, dot));
@@ -354,19 +352,18 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkTransAmultAdd(ComplexMatrix B, ComplexMatrix C) {
         if (numRows != B.numRows())
-            throw new IndexOutOfBoundsException("A.numRows != B.numRows ("
-                    + numRows + " != " + B.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != B.numRows (" + numRows + " != "
+                    + B.numRows() + ")");
         if (numColumns != C.numRows())
-            throw new IndexOutOfBoundsException("A.numColumns != C.numRows ("
-                    + numColumns + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != C.numRows (" + numColumns + " != "
+                    + C.numRows() + ")");
         if (B.numColumns() != C.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "B.numColumns != C.numColumns (" + B.numColumns() + " != "
-                            + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numColumns != C.numColumns (" + B.numColumns()
+                    + " != " + C.numColumns() + ")");
     }
 
     public ComplexMatrix transBmult(ComplexMatrix B, ComplexMatrix C) {
-        return transBmult(new double[]{1, 0}, B, C);
+        return transBmult(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transBmult(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -374,7 +371,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix transBmultAdd(ComplexMatrix B, ComplexMatrix C) {
-        return transBmultAdd(new double[]{1, 0}, B, C);
+        return transBmultAdd(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transBmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -383,8 +380,8 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (alpha[0] != 0 && alpha[1] != 0)
             for (int i = 0; i < numRows; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
-                    double[] dot = new double[]{0, 0};
-                    for (int k = 0; k < numColumns; ++k) 
+                    double[] dot = new double[] { 0, 0 };
+                    for (int k = 0; k < numColumns; ++k)
                         dot = Complexes.add(dot, Complexes.mult(get(i, k), B.get(j, k)));
                     C.add(i, j, Complexes.mult(alpha, dot));
                 }
@@ -398,19 +395,18 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkTransBmultAdd(ComplexMatrix B, ComplexMatrix C) {
         if (numColumns != B.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "A.numColumns != B.numColumns (" + numColumns + " != "
-                            + B.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != B.numColumns (" + numColumns
+                    + " != " + B.numColumns() + ")");
         if (numRows != C.numRows())
-            throw new IndexOutOfBoundsException("A.numRows != C.numRows ("
-                    + numRows + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != C.numRows (" + numRows + " != "
+                    + C.numRows() + ")");
         if (B.numRows() != C.numColumns())
-            throw new IndexOutOfBoundsException("B.numRows != C.numColumns ("
-                    + B.numRows() + " != " + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numRows != C.numColumns (" + B.numRows()
+                    + " != " + C.numColumns() + ")");
     }
 
     public ComplexMatrix transABmult(ComplexMatrix B, ComplexMatrix C) {
-        return transABmult(new double[]{1, 0}, B, C);
+        return transABmult(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transABmult(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -418,7 +414,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix transABmultAdd(ComplexMatrix B, ComplexMatrix C) {
-        return transABmultAdd(new double[]{1, 0}, B, C);
+        return transABmultAdd(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transABmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -427,7 +423,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (alpha[0] != 0 && alpha[1] != 0)
             for (int i = 0; i < numColumns; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
-                    double[] dot = new double[]{0, 0};
+                    double[] dot = new double[] { 0, 0 };
                     for (int k = 0; k < numRows; ++k) {
                         dot = Complexes.add(dot, Complexes.mult(get(k, i), B.get(j, k)));
                     }
@@ -443,17 +439,17 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkTransABmultAdd(ComplexMatrix B, ComplexMatrix C) {
         if (numRows != B.numColumns())
-            throw new IndexOutOfBoundsException("A.numRows != B.numColumns ("
-                    + numRows + " != " + B.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != B.numColumns (" + numRows + " != "
+                    + B.numColumns() + ")");
         if (numColumns != C.numRows())
-            throw new IndexOutOfBoundsException("A.numColumns != C.numRows ("
-                    + numColumns + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != C.numRows (" + numColumns + " != "
+                    + C.numRows() + ")");
         if (B.numRows() != C.numColumns())
-            throw new IndexOutOfBoundsException("B.numRows != C.numColumns ("
-                    + B.numRows() + " != " + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numRows != C.numColumns (" + B.numRows()
+                    + " != " + C.numColumns() + ")");
     }
 
-    public ComplexMatrix solve(ComplexMatrix B, ComplexMatrix X) {       
+    public ComplexMatrix solve(ComplexMatrix B, ComplexMatrix X) {
         throw new UnsupportedOperationException();
     }
 
@@ -469,19 +465,18 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (B.numRows() != numRows)
-            throw new IndexOutOfBoundsException("B.numRows != A.numRows ("
-                    + B.numRows() + " != " + numRows + ")");
+            throw new IndexOutOfBoundsException("B.numRows != A.numRows (" + B.numRows() + " != "
+                    + numRows + ")");
         if (B.numColumns() != X.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "B.numColumns != X.numColumns (" + B.numColumns() + " != "
-                            + X.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numColumns != X.numColumns (" + B.numColumns()
+                    + " != " + X.numColumns() + ")");
         if (X.numRows() != numColumns)
-            throw new IndexOutOfBoundsException("X.numRows != A.numColumns ("
-                    + X.numRows() + " != " + numColumns + ")");
+            throw new IndexOutOfBoundsException("X.numRows != A.numColumns (" + X.numRows()
+                    + " != " + numColumns + ")");
     }
 
     public ComplexMatrix rank1(ComplexMatrix C) {
-        return rank1(new double[]{1, 0}, C);
+        return rank1(new double[] { 1, 0 }, C);
     }
 
     public ComplexMatrix rank1(double alpha[], ComplexMatrix C) {
@@ -500,12 +495,12 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (numRows != C.numRows())
-            throw new IndexOutOfBoundsException("A.numRows != C.numRows ("
-                    + numRows + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != C.numRows (" + numRows + " != "
+                    + C.numRows() + ")");
     }
 
     public ComplexMatrix transRank1(ComplexMatrix C) {
-        return transRank1(new double[]{1, 0}, C);
+        return transRank1(new double[] { 1, 0 }, C);
     }
 
     public ComplexMatrix transRank1(double alpha[], ComplexMatrix C) {
@@ -524,12 +519,12 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (numRows != C.numColumns())
-            throw new IndexOutOfBoundsException("A.numRows != C.numColumns ("
-                    + numRows + " != " + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != C.numColumns (" + numRows + " != "
+                    + C.numColumns() + ")");
     }
 
     public ComplexMatrix rank2(ComplexMatrix B, ComplexMatrix C) {
-        return rank2(new double[]{1, 0}, B, C);
+        return rank2(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix rank2(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -548,16 +543,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (B.numRows() != C.numRows())
-            throw new IndexOutOfBoundsException("B.numRows != C.numRows ("
-                    + B.numRows() + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("B.numRows != C.numRows (" + B.numRows() + " != "
+                    + C.numRows() + ")");
         if (B.numColumns() != C.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "B.numColumns != C.numColumns (" + B.numColumns() + " != "
-                            + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numColumns != C.numColumns (" + B.numColumns()
+                    + " != " + C.numColumns() + ")");
     }
 
     public ComplexMatrix transRank2(ComplexMatrix B, ComplexMatrix C) {
-        return transRank2(new double[]{1, 0}, B, C);
+        return transRank2(new double[] { 1, 0 }, B, C);
     }
 
     public ComplexMatrix transRank2(double alpha[], ComplexMatrix B, ComplexMatrix C) {
@@ -576,15 +570,14 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (!isSquare())
             throw new IndexOutOfBoundsException("!A.isSquare");
         if (numRows != B.numColumns())
-            throw new IndexOutOfBoundsException("A.numRows != B.numColumns ("
-                    + numRows + " != " + B.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != B.numColumns (" + numRows + " != "
+                    + B.numColumns() + ")");
         if (B.numRows() != C.numRows())
-            throw new IndexOutOfBoundsException("B.numRows != C.numRows ("
-                    + B.numRows() + " != " + C.numRows() + ")");
+            throw new IndexOutOfBoundsException("B.numRows != C.numRows (" + B.numRows() + " != "
+                    + C.numRows() + ")");
         if (B.numColumns() != C.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "B.numColumns != C.numColumns (" + B.numColumns() + " != "
-                            + C.numColumns() + ")");
+            throw new IndexOutOfBoundsException("B.numColumns != C.numColumns (" + B.numColumns()
+                    + " != " + C.numColumns() + ")");
     }
 
     public ComplexMatrix scale(double alpha[]) {
@@ -600,7 +593,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix set(ComplexMatrix B) {
-        return set(new double[]{1, 0}, B);
+        return set(new double[] { 1, 0 }, B);
     }
 
     public ComplexMatrix set(double alpha[], ComplexMatrix B) {
@@ -619,7 +612,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix add(ComplexMatrix B) {
-        return add(new double[]{1, 0}, B);
+        return add(new double[] { 1, 0 }, B);
     }
 
     public ComplexMatrix add(double alpha[], ComplexMatrix B) {
@@ -637,12 +630,11 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkSize(ComplexMatrix B) {
         if (numRows != B.numRows())
-            throw new IndexOutOfBoundsException("A.numRows != B.numRows ("
-                    + numRows + " != " + B.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != B.numRows (" + numRows + " != "
+                    + B.numRows() + ")");
         if (numColumns != B.numColumns())
-            throw new IndexOutOfBoundsException(
-                    "A.numColumns != B.numColumns (" + numColumns + " != "
-                            + B.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != B.numColumns (" + numColumns
+                    + " != " + B.numColumns() + ")");
     }
 
     public ComplexMatrix transpose() {
@@ -684,11 +676,11 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
      */
     protected void checkTranspose(ComplexMatrix B) {
         if (numRows != B.numColumns())
-            throw new IndexOutOfBoundsException("A.numRows != B.numColumns ("
-                    + numRows + " != " + B.numColumns() + ")");
+            throw new IndexOutOfBoundsException("A.numRows != B.numColumns (" + numRows + " != "
+                    + B.numColumns() + ")");
         if (numColumns != B.numRows())
-            throw new IndexOutOfBoundsException("A.numColumns != B.numRows ("
-                    + numColumns + " != " + B.numRows() + ")");
+            throw new IndexOutOfBoundsException("A.numColumns != B.numRows (" + numColumns + " != "
+                    + B.numRows() + ")");
     }
 
     public double norm(Norm type) {
@@ -768,13 +760,11 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         @SuppressWarnings("resource")
         Formatter out = new Formatter();
 
-        out.format("%10d %10d %19d\n", numRows, numColumns, ComplexMatrices
-                .cardinality(this));
+        out.format("%10d %10d %19d\n", numRows, numColumns, ComplexMatrices.cardinality(this));
 
         for (ComplexMatrixEntry e : this)
             if (e.get()[0] != 0 || e.get()[1] != 0)
-                out.format("%10d %10d % .12e\n", e.row() + 1, e.column() + 1, e
-                        .get());
+                out.format("%10d %10d % .12e\n", e.row() + 1, e.column() + 1, e.get());
 
         return out.toString();
     }
@@ -817,7 +807,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         }
 
         public void remove() {
-            entry.set(new double[]{0, 0});
+            entry.set(new double[] { 0, 0 });
         }
 
     }

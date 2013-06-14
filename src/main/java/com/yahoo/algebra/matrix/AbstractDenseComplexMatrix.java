@@ -19,7 +19,7 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
 
         data = new double[numRows * 2 * numColumns * 2];
     }
-    
+
     /**
      * Constructor for AbstractDenseMatrix. Matrix is copied from the supplied
      * matrix
@@ -62,15 +62,15 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
     public double[] getData() {
         return data;
     }
-    
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i=0; i<numRows(); i++) {
-            for (int j=0; j<numColumns(); j++) {
+        for (int i = 0; i < numRows(); i++) {
+            for (int j = 0; j < numColumns(); j++) {
                 sb.append(String.format("%6.4g", get(i, j)[0]));
                 sb.append(String.format("%+6.4gj\t", get(i, j)[1]));
             }
-            if (i!=numRows()-1) {
+            if (i != numRows() - 1) {
                 sb.append("\n");
             }
         }
@@ -100,7 +100,7 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
     @Override
     public double[] get(int row, int column) {
         int[] index = getIndex(row, column);
-        return new double[]{data[index[0]], data[index[1]]};
+        return new double[] { data[index[0]], data[index[1]] };
     }
 
     /**
@@ -110,7 +110,7 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
         check(row, column);
         int re = row + numRows * 2 * column;
         int im = row + numRows + numRows * 2 * column;
-        return new int[]{re, im};
+        return new int[] { re, im };
     }
 
     @Override

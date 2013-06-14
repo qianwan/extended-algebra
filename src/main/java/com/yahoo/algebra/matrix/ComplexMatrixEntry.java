@@ -1,6 +1,8 @@
 package com.yahoo.algebra.matrix;
+
 /**
- * An entry of a complex matrix. Returned by the iterators over a complex matrix structure
+ * An entry of a complex matrix. Returned by the iterators over a complex matrix
+ * structure
  */
 public interface ComplexMatrixEntry {
     /**
@@ -21,5 +23,5 @@ public interface ComplexMatrixEntry {
     /**
      * Sets the value at the current index
      */
-    void set(double []value);
+    void set(double[] value);
 }

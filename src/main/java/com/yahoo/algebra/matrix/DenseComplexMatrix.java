@@ -134,8 +134,8 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
     @Override
     void copy(ComplexMatrix A) {
         if (A instanceof DenseComplexMatrix) {
-            double []data_ = ((DenseComplexMatrix) A).getData();
-            for (int i=0; i<data.length; i++) {
+            double[] data_ = ((DenseComplexMatrix) A).getData();
+            for (int i = 0; i < data.length; i++) {
                 data[i] = data_[i];
             }
         } else {
@@ -170,12 +170,12 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
 
         return A;
     }
-    
+
     /**
      * extended DenseMatrix
      */
     public DenseMatrix getDenseMatrix() {
-        DenseMatrix A = new DenseMatrix(2*numRows(), 2*numColumns());
+        DenseMatrix A = new DenseMatrix(2 * numRows(), 2 * numColumns());
         for (MatrixEntry e : A) {
             int row = e.row();
             int col = e.column();
@@ -183,7 +183,7 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         }
         return A;
     }
-    
+
     /**
      * sqr of determinant
      */
@@ -195,7 +195,7 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         DenseLU denseLU = DenseLU.factorize(A);
         UpperTriangDenseMatrix U = denseLU.getU();
         double ret = 1.0;
-        for (int i=0; i<U.numRows(); i++) {
+        for (int i = 0; i < U.numRows(); i++) {
             ret *= U.get(i, i);
         }
         ret = Math.abs(ret);

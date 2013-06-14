@@ -3,8 +3,7 @@ package com.yahoo.algebra.matrix;
 import no.uib.cipr.matrix.MatrixNotSPDException;
 import no.uib.cipr.matrix.MatrixSingularException;
 
-
-public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
+public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
 
     /**
      * Number of rows in the matrix
@@ -140,10 +139,10 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
     ComplexVector transMultAdd(double alpha[], ComplexVector x, ComplexVector y);
 
     /**
-     * <code>x = A\b</code>. Not all matrices support this operation, those
-     * that do not throw <code>UnsupportedOperationException</code>. Note
-     * that it is often more efficient to use a matrix decomposition and its
-     * associated solver
+     * <code>x = A\b</code>. Not all matrices support this operation, those that
+     * do not throw <code>UnsupportedOperationException</code>. Note that it is
+     * often more efficient to use a matrix decomposition and its associated
+     * solver
      * 
      * @param b
      *            Vector of size <code>A.numRows()</code>
@@ -180,48 +179,48 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
             MatrixNotSPDException;
 
     /**
-     * <code>A = x*x<sup>T</sup> + A</code>. The matrix must be square, and
-     * the vector of the same length
+     * <code>A = x*x<sup>T</sup> + A</code>. The matrix must be square, and the
+     * vector of the same length
      * 
      * @return A
      */
     ComplexMatrix rank1(ComplexVector x);
 
     /**
-     * <code>A = alpha*x*x<sup>T</sup> + A</code>. The matrix must be
-     * square, and the vector of the same length
+     * <code>A = alpha*x*x<sup>T</sup> + A</code>. The matrix must be square,
+     * and the vector of the same length
      * 
      * @return A
      */
     ComplexMatrix rank1(double alpha[], ComplexVector x);
 
     /**
-     * <code>A = x*y<sup>T</sup> + A</code>. The matrix must be square, and
-     * the vectors of the same length
+     * <code>A = x*y<sup>T</sup> + A</code>. The matrix must be square, and the
+     * vectors of the same length
      * 
      * @return A
      */
     ComplexMatrix rank1(ComplexVector x, ComplexVector y);
 
     /**
-     * <code>A = alpha*x*y<sup>T</sup> + A</code>. The matrix must be
-     * square, and the vectors of the same length
+     * <code>A = alpha*x*y<sup>T</sup> + A</code>. The matrix must be square,
+     * and the vectors of the same length
      * 
      * @return A
      */
     ComplexMatrix rank1(double alpha[], ComplexVector x, ComplexVector y);
 
     /**
-     * <code>A = x*y<sup>T</sup> + y*x<sup>T</sup> + A</code>. The matrix
-     * must be square, and the vectors of the same length
+     * <code>A = x*y<sup>T</sup> + y*x<sup>T</sup> + A</code>. The matrix must
+     * be square, and the vectors of the same length
      * 
      * @return A
      */
     ComplexMatrix rank2(ComplexVector x, ComplexVector y);
 
     /**
-     * <code>A = alpha*x*y<sup>T</sup> + alpha*y*x<sup>T</sup> + A</code>.
-     * The matrix must be square, and the vectors of the same length
+     * <code>A = alpha*x*y<sup>T</sup> + alpha*y*x<sup>T</sup> + A</code>. The
+     * matrix must be square, and the vectors of the same length
      * 
      * @return A
      */
@@ -436,17 +435,17 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
     ComplexMatrix transABmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C);
 
     /**
-     * <code>X = A\B</code>. Not all matrices support this operation, those
-     * that do not throw <code>UnsupportedOperationException</code>. Note
-     * that it is often more efficient to use a matrix decomposition and its
-     * associated solver
+     * <code>X = A\B</code>. Not all matrices support this operation, those that
+     * do not throw <code>UnsupportedOperationException</code>. Note that it is
+     * often more efficient to use a matrix decomposition and its associated
+     * solver
      * 
      * @param B
-     *            Matrix with the same number of rows as <code>A</code>, and
-     *            the same number of columns as <code>X</code>
+     *            Matrix with the same number of rows as <code>A</code>, and the
+     *            same number of columns as <code>X</code>
      * @param X
-     *            Matrix with a number of rows equal <code>A.numColumns()</code>,
-     *            and the same number of columns as <code>B</code>
+     *            Matrix with a number of rows equal <code>A.numColumns()</code>
+     *            , and the same number of columns as <code>B</code>
      * @return X
      * @throws MatrixSingularException
      *             If the matrix is singular
@@ -465,11 +464,11 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
      * solver
      * 
      * @param B
-     *            Matrix with a number of rows equal <code>A.numColumns()</code>,
-     *            and the same number of columns as <code>X</code>
+     *            Matrix with a number of rows equal <code>A.numColumns()</code>
+     *            , and the same number of columns as <code>X</code>
      * @param X
-     *            Matrix with the same number of rows as <code>A</code>, and
-     *            the same number of columns as <code>B</code>
+     *            Matrix with the same number of rows as <code>A</code>, and the
+     *            same number of columns as <code>B</code>
      * @return X
      * @throws MatrixSingularException
      *             If the matrix is singular
@@ -481,89 +480,89 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
             MatrixNotSPDException;
 
     /**
-     * <code>A = C*C<sup>T</sup> + A</code>. The matrices must be square
-     * and of the same size
+     * <code>A = C*C<sup>T</sup> + A</code>. The matrices must be square and of
+     * the same size
      * 
      * @return A
      */
     ComplexMatrix rank1(ComplexMatrix C);
 
     /**
-     * <code>A = alpha*C*C<sup>T</sup> + A</code>. The matrices must be
-     * square and of the same size
+     * <code>A = alpha*C*C<sup>T</sup> + A</code>. The matrices must be square
+     * and of the same size
      * 
      * @return A
      */
     ComplexMatrix rank1(double alpha[], ComplexMatrix C);
 
     /**
-     * <code>A = C<sup>T</sup>*C + A</code> The matrices must be square and
-     * of the same size
+     * <code>A = C<sup>T</sup>*C + A</code> The matrices must be square and of
+     * the same size
      * 
      * @return A
      */
     ComplexMatrix transRank1(ComplexMatrix C);
 
     /**
-     * <code>A = alpha*C<sup>T</sup>*C + A</code> The matrices must be
-     * square and of the same size
+     * <code>A = alpha*C<sup>T</sup>*C + A</code> The matrices must be square
+     * and of the same size
      * 
      * @return A
      */
     ComplexMatrix transRank1(double alpha[], ComplexMatrix C);
 
     /**
-     * <code>A = B*C<sup>T</sup> + C*B<sup>T</sup> + A</code>. This
-     * matrix must be square
+     * <code>A = B*C<sup>T</sup> + C*B<sup>T</sup> + A</code>. This matrix must
+     * be square
      * 
      * @param B
-     *            Matrix with the same number of rows as <code>A</code> and
-     *            the same number of columns as <code>C</code>
+     *            Matrix with the same number of rows as <code>A</code> and the
+     *            same number of columns as <code>C</code>
      * @param C
-     *            Matrix with the same number of rows as <code>A</code> and
-     *            the same number of columns as <code>B</code>
+     *            Matrix with the same number of rows as <code>A</code> and the
+     *            same number of columns as <code>B</code>
      * @return A
      */
     ComplexMatrix rank2(ComplexMatrix B, ComplexMatrix C);
 
     /**
-     * <code>A = alpha*B*C<sup>T</sup> + alpha*C*B<sup>T</sup> + A</code>.
-     * This matrix must be square
+     * <code>A = alpha*B*C<sup>T</sup> + alpha*C*B<sup>T</sup> + A</code>. This
+     * matrix must be square
      * 
      * @param B
-     *            Matrix with the same number of rows as <code>A</code> and
-     *            the same number of columns as <code>C</code>
+     *            Matrix with the same number of rows as <code>A</code> and the
+     *            same number of columns as <code>C</code>
      * @param C
-     *            Matrix with the same number of rows as <code>A</code> and
-     *            the same number of columns as <code>B</code>
+     *            Matrix with the same number of rows as <code>A</code> and the
+     *            same number of columns as <code>B</code>
      * @return A
      */
     ComplexMatrix rank2(double alpha[], ComplexMatrix B, ComplexMatrix C);
 
     /**
-     * <code>A = B<sup>T</sup>*C + C<sup>T</sup>*B + A</code>. This
-     * matrix must be square
+     * <code>A = B<sup>T</sup>*C + C<sup>T</sup>*B + A</code>. This matrix must
+     * be square
      * 
      * @param B
-     *            Matrix with the same number of rows as <code>C</code> and
-     *            the same number of columns as <code>A</code>
+     *            Matrix with the same number of rows as <code>C</code> and the
+     *            same number of columns as <code>A</code>
      * @param C
-     *            Matrix with the same number of rows as <code>B</code> and
-     *            the same number of columns as <code>A</code>
+     *            Matrix with the same number of rows as <code>B</code> and the
+     *            same number of columns as <code>A</code>
      * @return A
      */
     ComplexMatrix transRank2(ComplexMatrix B, ComplexMatrix C);
 
     /**
-     * <code>A = alpha*B<sup>T</sup>*C + alpha*C<sup>T</sup>*B + A</code>.
-     * This matrix must be square
+     * <code>A = alpha*B<sup>T</sup>*C + alpha*C<sup>T</sup>*B + A</code>. This
+     * matrix must be square
      * 
      * @param B
-     *            Matrix with the same number of rows as <code>C</code> and
-     *            the same number of columns as <code>A</code>
+     *            Matrix with the same number of rows as <code>C</code> and the
+     *            same number of columns as <code>A</code>
      * @param C
-     *            Matrix with the same number of rows as <code>B</code> and
-     *            the same number of columns as <code>A</code>
+     *            Matrix with the same number of rows as <code>B</code> and the
+     *            same number of columns as <code>A</code>
      * @return A
      */
     ComplexMatrix transRank2(double alpha[], ComplexMatrix B, ComplexMatrix C);
@@ -612,8 +611,8 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
     ComplexMatrix transpose();
 
     /**
-     * Sets the tranpose of this matrix into <code>B</code>. Matrix
-     * dimensions must be compatible
+     * Sets the tranpose of this matrix into <code>B</code>. Matrix dimensions
+     * must be compatible
      * 
      * @param B
      *            Matrix with as many rows as this matrix has columns, and as
@@ -656,20 +655,20 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry>{
          */
         Maxvalue;
 
-		/**
-		 * @return the String as required by the netlib libraries to represent this norm.
-		 */
-		public String netlib() {
-			// TODO: this is a bit of a hack
-			// shouldn't need to know about the internals of netlib
-		    if (this == One)
-		        return "1";
-		    else if (this == Infinity)
-		        return "I";
-		    else
-		        throw new IllegalArgumentException(
-		                "Norm must be the 1 or the Infinity norm");
-		}
+        /**
+         * @return the String as required by the netlib libraries to represent
+         *         this norm.
+         */
+        public String netlib() {
+            // TODO: this is a bit of a hack
+            // shouldn't need to know about the internals of netlib
+            if (this == One)
+                return "1";
+            else if (this == Infinity)
+                return "I";
+            else
+                throw new IllegalArgumentException("Norm must be the 1 or the Infinity norm");
+        }
 
     }
 }

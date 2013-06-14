@@ -2,7 +2,7 @@ package com.yahoo.algebra.matrix;
 
 import java.io.Serializable;
 
-public interface ComplexVector extends Iterable<ComplexVectorEntry>, Serializable{
+public interface ComplexVector extends Iterable<ComplexVectorEntry>, Serializable {
 
     /**
      * Size of the vector

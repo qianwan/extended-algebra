@@ -17,8 +17,9 @@ public abstract class Entity implements MIMOChannel {
     protected static GaussianGenerator rng;
 
     static {
-        byte[] seed = new byte[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
-        rng = new GaussianGenerator(0, 1, new MersenneTwisterRNG(seed));
+        // byte[] seed = new byte[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+        // 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
+        rng = new GaussianGenerator(0, 1, new MersenneTwisterRNG());
     }
 
     private double x;
@@ -105,7 +106,8 @@ public abstract class Entity implements MIMOChannel {
     public void setMIMOChannel(Entity e, DenseComplexMatrix H) {
         Assert.assertFalse(e.getType() == this.getType());
         if (H.numRows() != e.getNumAntennas() || H.numColumns() != this.getNumAntennas()) {
-            logger.error("MIMO channel not compatible with number of antennas of entities", new Exception());
+            logger.error("MIMO channel not compatible with number of antennas of entities",
+                    new Exception());
         }
         mimoChannels.put(e, H);
     }

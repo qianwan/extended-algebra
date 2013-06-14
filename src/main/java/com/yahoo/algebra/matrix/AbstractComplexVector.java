@@ -5,8 +5,8 @@ import java.util.Formatter;
 import java.util.Iterator;
 
 @SuppressWarnings("serial")
-public abstract class AbstractComplexVector implements ComplexVector, Serializable{
-	/**
+public abstract class AbstractComplexVector implements ComplexVector, Serializable {
+    /**
      * Size of the ComplexVector
      */
     protected int size;
@@ -42,8 +42,8 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
     }
 
     public void add(int index, double value[]) {
-    	double []adder = get(index);
-        set(index, new double[]{value[0]+adder[0], value[1]+adder[1]});
+        double[] adder = get(index);
+        set(index, new double[] { value[0] + adder[0], value[1] + adder[1] });
     }
 
     public double[] get(int index) {
@@ -59,16 +59,14 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
      */
     protected void check(int index) {
         if (index < 0)
-            throw new IndexOutOfBoundsException("index is negative (" + index
-                    + ")");
+            throw new IndexOutOfBoundsException("index is negative (" + index + ")");
         if (index >= size)
-            throw new IndexOutOfBoundsException("index >= size (" + index
-                    + " >= " + size + ")");
+            throw new IndexOutOfBoundsException("index >= size (" + index + " >= " + size + ")");
     }
 
     public ComplexVector zero() {
         for (ComplexVectorEntry e : this)
-            e.set(new double[]{0, 0});
+            e.set(new double[] { 0, 0 });
         return this;
     }
 
@@ -79,13 +77,13 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
             return this;
 
         for (ComplexVectorEntry e : this)
-        	e.set(Complexes.mult(e.get(), alpha));
+            e.set(Complexes.mult(e.get(), alpha));
 
         return this;
     }
 
     public ComplexVector set(ComplexVector y) {
-        return set(new double[]{1, 0}, y);
+        return set(new double[] { 1, 0 }, y);
     }
 
     public ComplexVector set(double alpha[], ComplexVector y) {
@@ -96,13 +94,13 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
 
         zero();
         for (ComplexVectorEntry e : y)
-        	set(e.index(), Complexes.mult(alpha, e.get()));
+            set(e.index(), Complexes.mult(alpha, e.get()));
 
         return this;
     }
 
     public ComplexVector add(ComplexVector y) {
-        return add(new double[]{1, 0}, y);
+        return add(new double[] { 1, 0 }, y);
     }
 
     public ComplexVector add(double alpha[], ComplexVector y) {
@@ -120,9 +118,10 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
     public double[] dot(ComplexVector y) {
         checkSize(y);
 
-        double []ret = new double[]{0, 0};
+        double[] ret = new double[] { 0, 0 };
         for (ComplexVectorEntry e : this) {
-        	ret = Complexes.add(ret, Complexes.mult(e.get(), Complexes.conjugate(y.get(e.index()))));
+            ret = Complexes
+                    .add(ret, Complexes.mult(e.get(), Complexes.conjugate(y.get(e.index()))));
         }
         return ret;
     }
@@ -132,8 +131,8 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
      */
     protected void checkSize(ComplexVector y) {
         if (size != y.size())
-            throw new IndexOutOfBoundsException("x.size != y.size (" + size
-                    + " != " + y.size() + ")");
+            throw new IndexOutOfBoundsException("x.size != y.size (" + size + " != " + y.size()
+                    + ")");
     }
 
     public double norm(Norm type) {
@@ -151,7 +150,7 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
     protected double norm1() {
         double sum = 0;
         for (ComplexVectorEntry e : this)
-        	sum += Complexes.abs(e.get());
+            sum += Complexes.abs(e.get());
         return sum;
     }
 
@@ -193,7 +192,7 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
     public String toString() {
         // Output into coordinate format. Indices start from 1 instead of 0
         @SuppressWarnings("resource")
-		Formatter out = new Formatter();
+        Formatter out = new Formatter();
 
         out.format("%10d %19d\n", size, ComplexMatrices.cardinality(this));
 
@@ -226,13 +225,14 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
         }
 
         public void remove() {
-            entry.set(new double[]{0, 0});
+            entry.set(new double[] { 0, 0 });
         }
 
     }
 
     /**
-     * ComplexVector entry backed by the ComplexVector. May be reused for higher performance
+     * ComplexVector entry backed by the ComplexVector. May be reused for higher
+     * performance
      */
     private class RefComplexVectorEntry implements ComplexVectorEntry {
 

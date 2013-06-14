@@ -9,23 +9,36 @@ import org.slf4j.LoggerFactory;
 import com.yahoo.algebra.matrix.ComplexMatrixEntry;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 
-public class Cluster extends Entity{
+public class Cluster extends Entity {
     private final static Logger logger = LoggerFactory.getLogger(Cluster.class);
-    public List<BaseStation> bss;
+    private List<BaseStation> bss;
+    private List<UE> ues;
+
     public Cluster() {
         super();
         setType(Entity.Type.CLUSTER);
         bss = new ArrayList<BaseStation>();
+        ues = new ArrayList<UE>();
     }
+
     public Cluster(double x, double y) {
         super(x, y);
         setType(Entity.Type.CLUSTER);
         bss = new ArrayList<BaseStation>();
+        ues = new ArrayList<UE>();
     }
+
     public void addBaseStation(BaseStation bs) {
         bss.add(bs);
+        bs.setCluster(this);
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
     }
+
+    public void addUE(UE ue) {
+        ues.add(ue);
+        ue.setCluster(this);
+    }
+
     public DenseComplexMatrix getMIMOChannel(Entity e) {
         DenseComplexMatrix H = null;
         if (e instanceof UE) {

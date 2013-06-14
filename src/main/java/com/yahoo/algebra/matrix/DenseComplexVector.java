@@ -51,32 +51,32 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
     @Override
     public void set(int index, double value[]) {
         data[index] = value[0];
-        data[size+index] = value[1];
+        data[size + index] = value[1];
     }
 
     @Override
     public double[] get(int index) {
-        return new double[]{data[index], data[size+index]};
+        return new double[] { data[index], data[size + index] };
     }
 
     @Override
     public ComplexVector copy() {
         return new DenseComplexVector(this);
     }
-    
+
     @Override
     public DenseComplexVector zero() {
         Arrays.fill(data, 0);
         return this;
     }
-    
+
     @Override
     public DenseComplexVector scale(double alpha[]) {
         for (int i = 0; i < size; ++i) {
-            double re = data[i]*alpha[0] - data[i+size]*alpha[1];
-            double im = data[i]*alpha[1] + data[i+size]*alpha[0];
+            double re = data[i] * alpha[0] - data[i + size] * alpha[1];
+            double im = data[i] * alpha[1] + data[i + size] * alpha[0];
             data[i] = re;
-            data[i+size] = im;
+            data[i + size] = im;
         }
         return this;
     }
@@ -107,8 +107,8 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         double[] yd = ((DenseComplexVector) y).getData();
 
         for (int i = 0; i < size; ++i) {
-            data[i]      = alpha[i]*yd[i] - alpha[i+size]*yd[i+size];
-            data[i+size] = alpha[i]*yd[i+size] + alpha[i+size]*yd[i]; 
+            data[i] = alpha[i] * yd[i] - alpha[i + size] * yd[i + size];
+            data[i + size] = alpha[i] * yd[i + size] + alpha[i + size] * yd[i];
         }
 
         return this;
@@ -142,10 +142,10 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         double[] yd = ((DenseComplexVector) y).getData();
 
         for (int i = 0; i < size; i++) {
-            double re = alpha[i]*yd[i] - alpha[i+size]*yd[i+size];
-            double im = alpha[i]*yd[i+size] + alpha[i+size]*yd[i];
+            double re = alpha[i] * yd[i] - alpha[i + size] * yd[i + size];
+            double im = alpha[i] * yd[i + size] + alpha[i + size] * yd[i];
             data[i] += re;
-            data[i+size] += im;
+            data[i + size] += im;
         }
 
         return this;
@@ -160,10 +160,10 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
 
         double[] yd = ((DenseComplexVector) y).getData();
 
-        double []dot = new double[]{0, 0};
+        double[] dot = new double[] { 0, 0 };
         for (int i = 0; i < size; ++i) {
-            dot[0] += data[i]*yd[i] + data[i+size]*yd[i+size];
-            dot[1] += -data[i+size]*yd[i] + data[i]*yd[i+size];
+            dot[0] += data[i] * yd[i] + data[i + size] * yd[i + size];
+            dot[1] += -data[i + size] * yd[i] + data[i] * yd[i + size];
         }
         return dot;
     }
@@ -172,7 +172,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
     protected double norm1() {
         double sum = 0;
         for (int i = 0; i < size; ++i)
-            sum += Math.sqrt(data[i]*data[i]+data[i+size]*data[i+size]);
+            sum += Math.sqrt(data[i] * data[i] + data[i + size] * data[i + size]);
         return sum;
     }
 
@@ -180,7 +180,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
     protected double norm2() {
         double norm = 0;
         for (int i = 0; i < size; ++i)
-            norm += data[i]*data[i] + data[i+size]*data[i+size];
+            norm += data[i] * data[i] + data[i + size] * data[i + size];
         return Math.sqrt(norm);
     }
 
@@ -193,7 +193,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
     protected double normInf() {
         double max = 0;
         for (int i = 0; i < size; ++i)
-            max = Math.max(Math.sqrt(data[i]*data[i]+data[i+size]*data[i+size]), max);
+            max = Math.max(Math.sqrt(data[i] * data[i] + data[i + size] * data[i + size]), max);
         return max;
     }
 
