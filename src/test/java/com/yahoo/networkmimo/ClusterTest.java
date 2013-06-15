@@ -31,4 +31,18 @@ public class ClusterTest {
         System.out.println(bs1.getMIMOChannel(ue));
         System.out.println(bs2.getMIMOChannel(ue));
     }
+
+    @Test
+    public void txPrecodingMatrixTest() {
+        Cluster cluster = new Cluster(-1750, -1000);
+        cluster.addBaseStation(new BaseStation(-2600, -1400, 4));
+        cluster.addBaseStation(new BaseStation(-1700, -1350, 4));
+        cluster.addBaseStation(new BaseStation(-1740, -1050, 4));
+        cluster.addBaseStation(new BaseStation(-1500, -1200, 4));
+        cluster.addBaseStation(new BaseStation(-1350, -1000, 4));
+        cluster.addUE(new UE(-2250, -500, 2));
+        cluster.addUE(new UE(-1500, -650, 2));
+        cluster.addUE(new UE(-1250, -1250, 2));
+
+    }
 }

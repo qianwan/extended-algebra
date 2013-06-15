@@ -31,7 +31,7 @@ public class Cluster extends Entity {
     }
 
     public void addBaseStation(BaseStation bs) {
-        bss.add(bs);
+        getBSs().add(bs);
         bs.setCluster(this);
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
     }
@@ -47,7 +47,7 @@ public class Cluster extends Entity {
         if (e instanceof UE) {
             H = new DenseComplexMatrix(e.getNumAntennas(), getNumAntennas());
             int columnOffset = 0;
-            for (BaseStation bs : bss) {
+            for (BaseStation bs : getBSs()) {
                 DenseComplexMatrix bsH = bs.getMIMOChannel(e);
                 for (ComplexMatrixEntry entry : bsH) {
                     H.set(entry.row(), entry.column() + columnOffset, entry.get());
@@ -74,7 +74,7 @@ public class Cluster extends Entity {
         for (UE ue : ues) {
             DenseComplexMatrix vik = txPrecodingMatrix.get(ue);
             int rowOffset = 0;
-            for (BaseStation bs : bss) {
+            for (BaseStation bs : getBSs()) {
                 DenseComplexMatrix vikq = bs.getTxPrecodingMatrix(ue);
                 for (ComplexMatrixEntry entry : vikq) {
                     vik.set(entry.row() + rowOffset, entry.column(), entry.get());
@@ -82,5 +82,12 @@ public class Cluster extends Entity {
                 rowOffset += bs.getNumAntennas();
             }
         }
+    }
+
+    /**
+     * @return the bss
+     */
+    public List<BaseStation> getBSs() {
+        return bss;
     }
 }

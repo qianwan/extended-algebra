@@ -34,20 +34,28 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         this(A.numRows(), A.numColumns());
     }
 
-    public boolean equals(AbstractComplexMatrix A) {
+    @Override
+    public boolean equals(Object A) {
+        if (null == A)
+            return false;
         if (this == A)
             return true;
         else {
-            if (numRows() != A.numRows() || numColumns() != A.numColumns()) {
-                return false;
-            }
-            for (ComplexMatrixEntry e : this) {
-                double[] v = e.get();
-                double[] vc = A.get(e.row(), e.column());
-                if (Math.abs(v[0] - vc[0]) > equalThreshold
-                        || Math.abs(v[1] - vc[1]) > equalThreshold) {
+            if (A instanceof AbstractComplexMatrix) {
+                AbstractComplexMatrix B = (AbstractComplexMatrix) A;
+                if (numRows() != B.numRows() || numColumns() != B.numColumns()) {
                     return false;
                 }
+                for (ComplexMatrixEntry e : this) {
+                    double[] v = e.get();
+                    double[] vc = B.get(e.row(), e.column());
+                    if (Math.abs(v[0] - vc[0]) > equalThreshold
+                            || Math.abs(v[1] - vc[1]) > equalThreshold) {
+                        return false;
+                    }
+                }
+            } else {
+                throw new UnsupportedOperationException();
             }
             return true;
         }
@@ -291,7 +299,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexMatrix multAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
         checkMultAdd(B, C);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (int i = 0; i < numRows; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
                     double[] dot = new double[] { 0, 0 };

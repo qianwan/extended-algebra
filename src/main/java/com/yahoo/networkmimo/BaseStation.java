@@ -47,7 +47,8 @@ public class BaseStation extends Entity {
     }
 
     /**
-     * @param powerBudget the powerBudget to set
+     * @param powerBudget
+     *            the powerBudget to set
      */
     public void setPowerBudget(double powerBudget) {
         this.powerBudget = powerBudget;

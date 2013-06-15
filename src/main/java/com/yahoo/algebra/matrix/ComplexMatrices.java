@@ -44,4 +44,15 @@ public final class ComplexMatrices {
         return nz;
     }
 
+    /**
+     * Returns the I matrix
+     */
+    public static DenseComplexMatrix eye(int size) {
+        DenseComplexMatrix e = new DenseComplexMatrix(size, size);
+        e.zero();
+        for (int i = 0; i < size; i++) {
+            e.set(i, i, new double[] { 1, 0 });
+        }
+        return e;
+    }
 }
