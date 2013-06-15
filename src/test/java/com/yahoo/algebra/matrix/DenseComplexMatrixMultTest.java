@@ -27,6 +27,10 @@ public class DenseComplexMatrixMultTest {
         B.set(2, 3, new double[]{1.63023528916473 , 1.43838029281510});
         DenseComplexMatrix C = new DenseComplexMatrix(2, 4);
         C = (DenseComplexMatrix) A.mult(B, C);
+        /*
+          -1.7491 - 3.3476i  -1.6008 - 3.4442i   0.8174 + 6.2819i  10.3768 + 7.5634i
+          -4.8978 + 3.0812i  -0.7515 + 4.8335i   9.0441 + 8.4835i   0.3381 + 0.6163i
+         **/
         System.out.println(C);
     }
 }
