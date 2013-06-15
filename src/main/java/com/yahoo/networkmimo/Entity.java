@@ -14,7 +14,7 @@ import com.yahoo.algebra.matrix.DenseComplexMatrix;
 public abstract class Entity implements MIMOChannel {
     Logger logger = Logger.getLogger(Entity.class);
 
-    protected static GaussianGenerator rng;
+    protected static final GaussianGenerator rng;
 
     static {
         // byte[] seed = new byte[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
@@ -28,7 +28,7 @@ public abstract class Entity implements MIMOChannel {
 
     private int numAntennas;
 
-    protected Map<Entity, DenseComplexMatrix> mimoChannels = Maps.newHashMap();
+    protected final Map<Entity, DenseComplexMatrix> mimoChannels = Maps.newHashMap();
 
     public enum Type {
         BS, CLUSTER, UE, UNKNOWN
@@ -83,10 +83,9 @@ public abstract class Entity implements MIMOChannel {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double[] p = e.getXY();
-        double d = Math.sqrt(Math.pow(p[0] - x, 2) + Math.pow(p[1] - y, 2));
-        double shadowVariance = Math.pow(10.0, rng.nextValue() * 8 / 10.0);
-        double coeffVariance = Math.pow(200.0 / d, 3.0) * shadowVariance;
-        double sigma = Math.sqrt(coeffVariance);
+        double distance = Math.sqrt(Math.pow(p[0] - x, 2) + Math.pow(p[1] - y, 2));
+        double channelGain = this.getChannelGain(distance, 2);
+        double sigma = Math.sqrt(channelGain / 2);
         for (ComplexMatrixEntry entry : H) {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
         }
@@ -110,5 +109,25 @@ public abstract class Entity implements MIMOChannel {
                     new Exception());
         }
         mimoChannels.put(e, H);
+    }
+
+    private double getChannelGain(double distance, int mode) {
+        double gainDb;
+        if (mode == 1) {
+            if (distance < 50) {
+                gainDb = 122 + 38 * Math.log10(50.0 / 1000);
+            } else {
+                gainDb = 122 + 38 * Math.log10(distance / 1000);
+            }
+        } else {
+            if (distance < 50) {
+                gainDb = 128.1 + 37.6 * Math.log10(50.0 / 1000);
+            } else {
+                gainDb = 128.1 + 37.6 * Math.log10(distance / 1000);
+            }
+        }
+        double gainTmp = Math.pow(10.0, -gainDb / 10);
+        double shadow = Math.pow(10.0, 8 * rng.nextValue() / 10);
+        return gainTmp * shadow;
     }
 }

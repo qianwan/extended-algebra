@@ -10,6 +10,8 @@ public class BaseStation extends Entity {
 
     private Cluster cluster;
 
+    private double powerBudget;
+
     public BaseStation(double x, double y, int numAntennas) {
         super(x, y, Entity.Type.BS, numAntennas);
     }
@@ -35,5 +37,19 @@ public class BaseStation extends Entity {
      */
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
+    }
+
+    /**
+     * @return the powerBudget
+     */
+    public double getPowerBudget() {
+        return powerBudget;
+    }
+
+    /**
+     * @param powerBudget the powerBudget to set
+     */
+    public void setPowerBudget(double powerBudget) {
+        this.powerBudget = powerBudget;
     }
 }
