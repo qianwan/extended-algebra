@@ -16,6 +16,11 @@ public class UE extends Entity {
         super(x, y, Entity.Type.UE, numAntennas);
     }
 
+    public UE(double x, double y, int numAntennas, int numStreams) {
+        super(x, y, Entity.Type.UE, numAntennas);
+        this.numStreams = numStreams;
+    }
+
     /**
      * @return the numStreams
      */

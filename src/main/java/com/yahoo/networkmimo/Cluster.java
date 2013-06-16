@@ -11,6 +11,7 @@ import com.beust.jcommander.internal.Maps;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexMatrixEntry;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
+import com.yahoo.networkmimo.exception.ClusterNotReadyException;
 
 public class Cluster extends Entity {
     private final static Logger logger = LoggerFactory.getLogger(Cluster.class);
@@ -72,6 +73,7 @@ public class Cluster extends Entity {
     }
 
     public void updateTxPrecodingMatrix() {
+        isReady();
         for (UE ue : getUEs()) {
             DenseComplexMatrix vik = txPrecodingMatrix.get(ue);
             int rowOffset = 0;
@@ -97,5 +99,23 @@ public class Cluster extends Entity {
      */
     public List<UE> getUEs() {
         return ues;
+    }
+
+    public ComplexMatrix getTxPrecodingMatrix(UE ue) {
+        return txPrecodingMatrix.get(ue);
+    }
+
+    public void isReady() throws ClusterNotReadyException {
+        for (UE ue : getUEs()) {
+            ComplexMatrix Vik = txPrecodingMatrix.get(ue);
+            if (Vik == null) {
+                throw new ClusterNotReadyException("tx precoding matrix for ue is null");
+            } else {
+                if (Vik.numRows() != getNumAntennas() || Vik.numColumns() != ue.getNumAntennas()) {
+                    throw new ClusterNotReadyException(
+                            "cluster configuration is not compatabile with size of tx precoding matrix");
+                }
+            }
+        }
     }
 }

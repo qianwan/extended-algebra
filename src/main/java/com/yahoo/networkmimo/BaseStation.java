@@ -7,7 +7,7 @@ import com.beust.jcommander.internal.Maps;
 import com.yahoo.algebra.matrix.ComplexMatrices;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
-import com.yahoo.networkmimo.exception.NetworkNotReady;
+import com.yahoo.networkmimo.exception.NetworkNotReadyException;
 
 public class BaseStation extends Entity {
     private Map<UE, ComplexMatrix> txPrecodingMatrix = Maps.newHashMap();
@@ -84,12 +84,15 @@ public class BaseStation extends Entity {
         this.lambda = lambda;
     }
 
-    public void genRandomTxPrecodingMatrix() {
+    public void genRandomTxPrecodingMatrix() throws NetworkNotReadyException {
         Cluster cluster = getCluster();
         if (cluster == null) {
-            throw new NetworkNotReady("This basestation is not added to any cluster");
+            throw new NetworkNotReadyException("This basestation is not added to any cluster");
         }
         List<UE> ues = cluster.getUEs();
+        if (ues.isEmpty()) {
+            throw new NetworkNotReadyException("No UE is added to the cluster where this BS belong");
+        }
         double powerPerUE = powerBudget / ues.size();
         for (UE ue : ues) {
             ComplexMatrix v = ComplexMatrices.random(new DenseComplexMatrix(getNumAntennas(), ue
