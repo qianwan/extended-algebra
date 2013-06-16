@@ -3,6 +3,8 @@ package com.yahoo.algebra.matrix;
 import java.util.Formatter;
 import java.util.Iterator;
 
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
+
 public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
     private static double equalThreshold = 1e-6;
@@ -49,8 +51,8 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
                 for (ComplexMatrixEntry e : this) {
                     double[] v = e.get();
                     double[] vc = B.get(e.row(), e.column());
-                    if (Math.abs(v[0] - vc[0]) > equalThreshold
-                            || Math.abs(v[1] - vc[1]) > equalThreshold) {
+                    if (Math.abs(v[0] - vc[0]) > getEqualThreshold()
+                            || Math.abs(v[1] - vc[1]) > getEqualThreshold()) {
                         return false;
                     }
                 }
@@ -658,6 +660,10 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         return this;
     }
 
+    public ComplexMatrix hermitianTranspose() {
+        throw new ComplexMatrixNotSPDException("in-place Hermitian transpose is not supported now");
+    }
+
     /**
      * Checks that the matrix may be transposed
      */
@@ -676,6 +682,20 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         for (ComplexMatrixEntry e : this)
             B.set(e.column(), e.row(), e.get());
 
+        return B;
+    }
+
+    public ComplexMatrix hermitianTranspose(ComplexMatrix B) {
+        checkTranspose(B);
+
+        if (B == this) {
+            return hermitianTranspose();
+        }
+
+        B.zero();
+        for (ComplexMatrixEntry e : this) {
+            B.set(e.column(), e.row(), Complexes.conjugate(e.get()));
+        }
         return B;
     }
 
@@ -779,6 +799,34 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
     public Iterator<ComplexMatrixEntry> iterator() {
         return new RefMatrixIterator();
+    }
+
+    /**
+     * @return the equalThreshold
+     */
+    public static double getEqualThreshold() {
+        return equalThreshold;
+    }
+
+    /**
+     * @param equalThreshold
+     *            the equalThreshold to set
+     */
+    public static void setEqualThreshold(double equalThreshold) {
+        AbstractComplexMatrix.equalThreshold = equalThreshold;
+    }
+
+    public double[] trace() {
+        if (!isSquare()) {
+            throw new ComplexMatrixNotSPDException(
+                    "trace operation is not supported for non-square matrix");
+        }
+
+        double[] trace = new double[] { 0.0, 0.0 };
+        for (int i = 0; i < numRows; i++) {
+            trace = Complexes.add(trace, get(i, i));
+        }
+        return trace;
     }
 
     /**

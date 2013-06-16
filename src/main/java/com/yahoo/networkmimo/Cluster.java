@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.internal.Maps;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexMatrixEntry;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 
@@ -37,7 +38,7 @@ public class Cluster extends Entity {
     }
 
     public void addUE(UE ue) {
-        ues.add(ue);
+        getUEs().add(ue);
         ue.setCluster(this);
     }
 
@@ -62,7 +63,7 @@ public class Cluster extends Entity {
     }
 
     public void initTxPrecodingMatrix() {
-        for (UE ue : ues) {
+        for (UE ue : getUEs()) {
             if (txPrecodingMatrix.get(ue) == null) {
                 txPrecodingMatrix.put(ue,
                         new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
@@ -71,11 +72,11 @@ public class Cluster extends Entity {
     }
 
     public void updateTxPrecodingMatrix() {
-        for (UE ue : ues) {
+        for (UE ue : getUEs()) {
             DenseComplexMatrix vik = txPrecodingMatrix.get(ue);
             int rowOffset = 0;
             for (BaseStation bs : getBSs()) {
-                DenseComplexMatrix vikq = bs.getTxPrecodingMatrix(ue);
+                ComplexMatrix vikq = bs.getTxPrecodingMatrix(ue);
                 for (ComplexMatrixEntry entry : vikq) {
                     vik.set(entry.row() + rowOffset, entry.column(), entry.get());
                 }
@@ -89,5 +90,12 @@ public class Cluster extends Entity {
      */
     public List<BaseStation> getBSs() {
         return bss;
+    }
+
+    /**
+     * @return the ues
+     */
+    public List<UE> getUEs() {
+        return ues;
     }
 }

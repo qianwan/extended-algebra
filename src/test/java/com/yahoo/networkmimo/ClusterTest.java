@@ -43,6 +43,6 @@ public class ClusterTest {
         cluster.addUE(new UE(-2250, -500, 2));
         cluster.addUE(new UE(-1500, -650, 2));
         cluster.addUE(new UE(-1250, -1250, 2));
-
+        cluster.getMIMOChannel(cluster.getUEs().get(0));
     }
 }

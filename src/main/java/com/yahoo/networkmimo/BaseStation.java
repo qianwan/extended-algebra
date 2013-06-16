@@ -1,26 +1,41 @@
 package com.yahoo.networkmimo;
 
+import java.util.List;
 import java.util.Map;
 
 import com.beust.jcommander.internal.Maps;
+import com.yahoo.algebra.matrix.ComplexMatrices;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
+import com.yahoo.networkmimo.exception.NetworkNotReady;
 
 public class BaseStation extends Entity {
-    private Map<UE, DenseComplexMatrix> txPrecodingMatrix = Maps.newHashMap();
+    private Map<UE, ComplexMatrix> txPrecodingMatrix = Maps.newHashMap();
 
     private Cluster cluster;
 
     private double powerBudget;
 
+    /**
+     * penalty parameter for sparsity
+     */
+    private double lambda;
+
     public BaseStation(double x, double y, int numAntennas) {
         super(x, y, Entity.Type.BS, numAntennas);
+    }
+
+    public BaseStation(double x, double y, int numAntennas, double powerBudget, double lambda) {
+        super(x, y, Entity.Type.BS, numAntennas);
+        setPowerBudget(powerBudget);
+        setLambda(lambda);
     }
 
     public void setTxPrecodingMatrx(UE ue, DenseComplexMatrix v) {
         txPrecodingMatrix.put(ue, v);
     }
 
-    public DenseComplexMatrix getTxPrecodingMatrix(UE ue) {
+    public ComplexMatrix getTxPrecodingMatrix(UE ue) {
         return txPrecodingMatrix.get(ue);
     }
 
@@ -52,5 +67,32 @@ public class BaseStation extends Entity {
      */
     public void setPowerBudget(double powerBudget) {
         this.powerBudget = powerBudget;
+    }
+
+    /**
+     * @return the lambda
+     */
+    public double getLambda() {
+        return lambda;
+    }
+
+    /**
+     * @param lambda the lambda to set
+     */
+    public void setLambda(double lambda) {
+        this.lambda = lambda;
+    }
+
+    public void genRandomTxPrecodingMatrix() {
+        Cluster cluster = getCluster();
+        if (cluster == null) {
+            throw new NetworkNotReady("This basestation is not added to any cluster");
+        }
+        List<UE> ues = cluster.getUEs();
+        double powerPerUE = powerBudget / ues.size();
+        for (UE ue : ues) {
+            ComplexMatrix v = ComplexMatrices.random(new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+            txPrecodingMatrix.put(ue, ComplexMatrices.setPower(v, powerPerUE));
+        }
     }
 }

@@ -1,6 +1,16 @@
 package com.yahoo.algebra.matrix;
 
+import org.uncommons.maths.random.GaussianGenerator;
+import org.uncommons.maths.random.MersenneTwisterRNG;
+
 public final class ComplexMatrices {
+    private static final GaussianGenerator rng;
+
+    static {
+        // byte[] seed = new byte[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+        // 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
+        rng = new GaussianGenerator(0, 1, new MersenneTwisterRNG());
+    }
     /**
      * <code>max(1, M)</code> provided as a convenience for 'leading dimension'
      * calculations.
@@ -54,5 +64,43 @@ public final class ComplexMatrices {
             e.set(i, i, new double[] { 1, 0 });
         }
         return e;
+    }
+
+    /**
+     * Generate a random complex matrix
+     */
+    public static ComplexMatrix random(ComplexMatrix A) {
+        for (int i=0; i<A.numRows(); i++) {
+            for (int j=0; j<A.numColumns(); j++) {
+                A.set(i, j, new double[]{rng.nextValue(), rng.nextValue()});
+            }
+        }
+        return A;
+    }
+
+    /**
+     * Return the power of a matrix
+     */
+    static public double getPower(ComplexMatrix A) {
+        ComplexMatrix B = A.hermitianTranspose(new DenseComplexMatrix(A.numColumns(), A.numRows()));
+
+        ComplexMatrix C = B.mult(A, new DenseComplexMatrix(B.numRows(), A.numColumns()));
+
+        return C.trace()[0];
+    }
+
+    /**
+     * 
+     */
+    public static ComplexMatrix setPower(ComplexMatrix A, double power) {
+        double oldPower = getPower(A);
+
+        double []alpha = new double[]{Math.sqrt(power / oldPower), 0};
+        for (int i = 0; i < A.numRows(); i++) {
+            for (int j = 0; j < A.numColumns(); j++) {
+                A.set(i, j, Complexes.mult(A.get(i, j), alpha));
+            }
+        }
+        return A;
     }
 }

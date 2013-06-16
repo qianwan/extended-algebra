@@ -611,7 +611,7 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     ComplexMatrix transpose();
 
     /**
-     * Sets the tranpose of this matrix into <code>B</code>. Matrix dimensions
+     * Sets the transpose of this matrix into <code>B</code>. Matrix dimensions
      * must be compatible
      * 
      * @param B
@@ -620,6 +620,17 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
      * @return The matrix <code>B=A<sup>T</sup></code>
      */
     ComplexMatrix transpose(ComplexMatrix B);
+
+    /**
+     * Hermitianly transposes the matrix in-place. In most cases, the matrix must be square
+     * for this to work.
+     */
+    ComplexMatrix hermitianTranspose();
+
+    /**
+     * Sets the Hermitian transpose of this matrix into <code>B</code>.
+     */
+    ComplexMatrix hermitianTranspose(ComplexMatrix B);
 
     /**
      * Computes the given norm of the matrix
@@ -671,4 +682,10 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
         }
 
     }
+
+    /**
+     * 
+     * @return trace of the matrix
+     */
+    public double[] trace();
 }
