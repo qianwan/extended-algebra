@@ -11,6 +11,7 @@ public final class ComplexMatrices {
         // 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
         rng = new GaussianGenerator(0, 1, new MersenneTwisterRNG());
     }
+
     /**
      * <code>max(1, M)</code> provided as a convenience for 'leading dimension'
      * calculations.
@@ -70,9 +71,9 @@ public final class ComplexMatrices {
      * Generate a random complex matrix
      */
     public static ComplexMatrix random(ComplexMatrix A) {
-        for (int i=0; i<A.numRows(); i++) {
-            for (int j=0; j<A.numColumns(); j++) {
-                A.set(i, j, new double[]{rng.nextValue(), rng.nextValue()});
+        for (int i = 0; i < A.numRows(); i++) {
+            for (int j = 0; j < A.numColumns(); j++) {
+                A.set(i, j, new double[] { rng.nextValue(), rng.nextValue() });
             }
         }
         return A;
@@ -95,7 +96,7 @@ public final class ComplexMatrices {
     public static ComplexMatrix setPower(ComplexMatrix A, double power) {
         double oldPower = getPower(A);
 
-        double []alpha = new double[]{Math.sqrt(power / oldPower), 0};
+        double[] alpha = new double[] { Math.sqrt(power / oldPower), 0 };
         for (int i = 0; i < A.numRows(); i++) {
             for (int j = 0; j < A.numColumns(); j++) {
                 A.set(i, j, Complexes.mult(A.get(i, j), alpha));

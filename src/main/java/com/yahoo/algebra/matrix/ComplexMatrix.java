@@ -622,8 +622,8 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     ComplexMatrix transpose(ComplexMatrix B);
 
     /**
-     * Hermitianly transposes the matrix in-place. In most cases, the matrix must be square
-     * for this to work.
+     * Hermitianly transposes the matrix in-place. In most cases, the matrix
+     * must be square for this to work.
      */
     ComplexMatrix hermitianTranspose();
 

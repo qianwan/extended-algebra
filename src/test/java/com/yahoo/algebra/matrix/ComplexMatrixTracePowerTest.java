@@ -43,7 +43,8 @@ public class ComplexMatrixTracePowerTest {
         A.set(1, 2, new double[] { -1.30768829630527, 3.03492346633185 });
         power = ComplexMatrices.getPower(A);
 
-        Assert.assertTrue(Math.abs(power - 43.1226670219272) < AbstractComplexMatrix.getEqualThreshold());
+        Assert.assertTrue(Math.abs(power - 43.1226670219272) < AbstractComplexMatrix
+                .getEqualThreshold());
 
         ComplexMatrices.setPower(A, 1.0);
         power = ComplexMatrices.getPower(A);

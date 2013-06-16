@@ -77,7 +77,8 @@ public class BaseStation extends Entity {
     }
 
     /**
-     * @param lambda the lambda to set
+     * @param lambda
+     *            the lambda to set
      */
     public void setLambda(double lambda) {
         this.lambda = lambda;
@@ -91,7 +92,8 @@ public class BaseStation extends Entity {
         List<UE> ues = cluster.getUEs();
         double powerPerUE = powerBudget / ues.size();
         for (UE ue : ues) {
-            ComplexMatrix v = ComplexMatrices.random(new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+            ComplexMatrix v = ComplexMatrices.random(new DenseComplexMatrix(getNumAntennas(), ue
+                    .getNumStreams()));
             txPrecodingMatrix.put(ue, ComplexMatrices.setPower(v, powerPerUE));
         }
     }
