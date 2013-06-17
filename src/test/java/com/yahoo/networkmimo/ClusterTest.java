@@ -72,6 +72,14 @@ public class ClusterTest {
             }
         }
 
+        // TODO test
+        
+        Network network = new Network();
+        network.addCluster(cluster);
+        for (UE ue : cluster.getUEs()) {
+            ue.calcRxPreMatrix();
+        }
+
         for (BaseStation bs : cluster.getBSs()) {
             bs.genRandomTxPrecodingMatrix();
         }

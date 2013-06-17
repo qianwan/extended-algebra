@@ -3,7 +3,6 @@ package com.yahoo.networkmimo;
 import com.yahoo.algebra.matrix.ComplexMatrices;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
-import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
 
 public class UE extends Entity {
     /**
@@ -84,15 +83,9 @@ public class UE extends Entity {
             for (UE ue : cluster.getUEs()) {
                 ComplexMatrix Vjl = cluster.getTxPrecodingMatrix(ue);
                 ComplexMatrix HV = Hikl.mult(Vjl, new DenseComplexMatrix(Hikl.numRows(), Vjl.numColumns()));
-                ComplexMatrix HVVH = null;
-                try {
-                    HVVH = HV.mult(
-                            HV.hermitianTranspose(new DenseComplexMatrix(HV.numColumns(), HV.numRows())),
-                            new DenseComplexMatrix(HV.numRows(), HV.numRows()));
-                } catch (ComplexMatrixNotSPDException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                ComplexMatrix HVVH = HV.mult(
+                        HV.hermitianTranspose(new DenseComplexMatrix(HV.numColumns(), HV.numRows())),
+                        new DenseComplexMatrix(HV.numRows(), HV.numRows()));
                 A.add(HVVH);
             }
         }
