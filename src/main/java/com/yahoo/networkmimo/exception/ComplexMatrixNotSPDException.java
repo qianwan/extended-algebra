@@ -1,6 +1,6 @@
 package com.yahoo.networkmimo.exception;
 
-public class ComplexMatrixNotSPDException extends Exception {
+public class ComplexMatrixNotSPDException extends RuntimeException {
 
     /**
      * 

@@ -129,7 +129,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexVector multAdd(double alpha[], ComplexVector x, ComplexVector y) {
         checkMultAdd(x, y);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (ComplexMatrixEntry e : this) {
                 double[] tmp = Complexes.mult(alpha, e.get());
                 tmp = Complexes.mult(tmp, x.get(e.column()));
@@ -165,7 +165,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexVector transMultAdd(double alpha[], ComplexVector x, ComplexVector y) {
         checkTransMultAdd(x, y);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (ComplexMatrixEntry e : this)
                 y.add(e.column(), Complexes.mult(Complexes.mult(alpha, e.get()), x.get(e.row())));
 
@@ -227,9 +227,9 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
             return this;
 
         for (ComplexVectorEntry ei : x)
-            if (ei.get()[0] != 0 && ei.get()[1] != 0)
+            if (ei.get()[0] != 0 || ei.get()[1] != 0)
                 for (ComplexVectorEntry ej : y)
-                    if (ej.get()[0] != 0 && ej.get()[1] != 0) {
+                    if (ej.get()[0] != 0 || ej.get()[1] != 0) {
                         double[] tmp = Complexes.mult(alpha, ei.get());
                         tmp = Complexes.mult(tmp, ej.get());
                         add(ei.index(), ej.index(), tmp);
@@ -344,7 +344,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexMatrix transAmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
         checkTransAmultAdd(B, C);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (int i = 0; i < numColumns; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
                     double[] dot = new double[] { 0, 0 };
@@ -387,7 +387,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexMatrix transBmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
         checkTransBmultAdd(B, C);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (int i = 0; i < numRows; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
                     double[] dot = new double[] { 0, 0 };
@@ -430,7 +430,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexMatrix transABmultAdd(double alpha[], ComplexMatrix B, ComplexMatrix C) {
         checkTransABmultAdd(B, C);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (int i = 0; i < numColumns; ++i)
                 for (int j = 0; j < C.numColumns(); ++j) {
                     double[] dot = new double[] { 0, 0 };
@@ -628,7 +628,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     public ComplexMatrix add(double alpha[], ComplexMatrix B) {
         checkSize(B);
 
-        if (alpha[0] != 0 && alpha[1] != 0)
+        if (alpha[0] != 0 || alpha[1] != 0)
             for (ComplexMatrixEntry e : B)
                 add(e.row(), e.column(), Complexes.mult(alpha, e.get()));
 

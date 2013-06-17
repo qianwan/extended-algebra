@@ -97,7 +97,12 @@ public class UE extends Entity {
             }
         }
         A.add(ComplexMatrices.eye(getNumAntennas()));
-        
+        A = A.inverse();
+        ComplexMatrix Hkik = cluster.getMIMOChannel(this);
+        ComplexMatrix C_1H = A.mult(Hkik, new DenseComplexMatrix(A.numRows(), Hkik.numColumns()));
+        ComplexMatrix Vik = cluster.getTxPrecodingMatrix(this);
+        ComplexMatrix Uik = C_1H.mult(Vik, new DenseComplexMatrix(C_1H.numRows(), Vik.numColumns()));
+        rxPrecodingMatrix.set(Uik);
     }
 
     public Network getNetwork() {
