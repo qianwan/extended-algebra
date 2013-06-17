@@ -229,6 +229,11 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     ComplexMatrix rank2(double alpha[], ComplexVector x, ComplexVector y);
 
     /**
+     * chained multiplying
+     */
+    ComplexMatrix mult(ComplexMatrix B);
+
+    /**
      * <code>C = A*B</code>
      * 
      * @param B
@@ -694,5 +699,11 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
      * @return trace of the matrix
      * @throws ComplexMatrixNotSPDException 
      */
-    public double[] trace() throws ComplexMatrixNotSPDException;
+    double[] trace() throws ComplexMatrixNotSPDException;
+
+    /**
+     * 
+     * @return determinant squared of the complex matrix 
+     */
+    double det2();
 }

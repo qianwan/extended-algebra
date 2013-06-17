@@ -205,6 +205,16 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         return ret;
     }
 
+    /**
+     * multplying chain
+     */
+    @Override
+    public ComplexMatrix mult(ComplexMatrix B) {
+        ComplexMatrix C = new DenseComplexMatrix(numRows(), B.numColumns());
+        checkMultAdd(B, C);
+        return mult(B, C);
+    }
+
     // @Override
     // public ComplexMatrix multAdd(double alpha[], ComplexMatrix B,
     // ComplexMatrix C) {

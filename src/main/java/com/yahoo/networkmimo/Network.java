@@ -34,4 +34,40 @@ public class Network {
     public List<Cluster> getClusters() {
         return clusters;
     }
+
+    public void optimize() {
+        initialize();
+    }
+
+    /**
+     * Generate a feasible set of txPreMatrix, rxPreMatrix and user weight
+     * @throws  
+     */
+    protected void initialize()  {
+        for (Cluster cluster : clusters) {
+            for (BaseStation bs : cluster.getBSs()) {
+                bs.genRandomTxPrecodingMatrix();
+            }
+            cluster.initTxPrecodingMatrix();
+            cluster.updateTxPrecodingMatrix();
+        }
+    }
+
+    /**
+     * Calculate receive precoding matrix for every UE 
+     */
+    protected void updateUERxPreMatrix() {
+        for (Cluster cluster : clusters) {
+            for (UE ue : cluster.getUEs()) {
+                ue.calcRxPreMatrixAndRate();
+            }
+        }
+    }
+
+    /**
+     * 
+     */
+    protected void updateWeight() {
+        
+    }
 }

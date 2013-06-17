@@ -286,6 +286,15 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
                     + numRows + ")");
     }
 
+    /**
+     * chained multiplying, not supported for abstract matrix class
+     * @param B multiplier
+     * @return
+     */
+    public ComplexMatrix mult(ComplexMatrix B) {
+        throw new ComplexMatrixNotSPDException("chain mulpiplying is not supported for AbstractComplexMatrix");
+    }
+
     public ComplexMatrix mult(ComplexMatrix B, ComplexMatrix C) {
         return mult(new double[] { 1, 0 }, B, C);
     }
