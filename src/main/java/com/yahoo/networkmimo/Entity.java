@@ -8,6 +8,7 @@ import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
 import com.beust.jcommander.internal.Maps;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexMatrixEntry;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 
@@ -28,7 +29,7 @@ public abstract class Entity implements MIMOChannel {
 
     private int numAntennas;
 
-    protected final Map<Entity, DenseComplexMatrix> mimoChannels = Maps.newHashMap();
+    protected final Map<Entity, ComplexMatrix> mimoChannels = Maps.newHashMap();
 
     public enum Type {
         BS, CLUSTER, UE, UNKNOWN
@@ -79,7 +80,7 @@ public abstract class Entity implements MIMOChannel {
         this.t = t;
     }
 
-    public DenseComplexMatrix generateMIMOChannel(Entity e) {
+    public ComplexMatrix generateMIMOChannel(Entity e) {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double[] p = e.getXY();
@@ -93,16 +94,16 @@ public abstract class Entity implements MIMOChannel {
         return H;
     }
 
-    public DenseComplexMatrix getMIMOChannel(Entity e) {
-        DenseComplexMatrix H = mimoChannels.get(e);
+    public ComplexMatrix getMIMOChannel(Entity e) {
+        ComplexMatrix H = mimoChannels.get(e);
         if (H == null) {
-            H = this.generateMIMOChannel(e);
+            H = generateMIMOChannel(e);
             mimoChannels.put(e, H);
         }
         return H;
     }
 
-    public void setMIMOChannel(Entity e, DenseComplexMatrix H) {
+    public void setMIMOChannel(Entity e, ComplexMatrix H) {
         Assert.assertFalse(e.getType() == this.getType());
         if (H.numRows() != e.getNumAntennas() || H.numColumns() != this.getNumAntennas()) {
             logger.error("MIMO channel not compatible with number of antennas of entities",

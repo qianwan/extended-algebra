@@ -1,25 +1,29 @@
 package com.yahoo.algebra.matrix;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.yahoo.algebra.matrix.ComplexMatrix.Norm;
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
 
 public class ComplexMatrixTracePowerTest {
     @Test
-    public void traceTest() {
+    public void traceTest() throws ComplexMatrixNotSPDException {
         ComplexMatrix A = ComplexMatrices.random(new DenseComplexMatrix(40, 40));
 
         double[] trace = new double[] { 0, 0 };
         for (int i = 0; i < A.numRows(); i++) {
             trace = Complexes.add(trace, A.get(i, i));
         }
-        Assert.assertTrue(Math.abs(trace[0] - A.trace()[0]) < AbstractComplexMatrix
+        double[] Atrace = A.trace();
+        Assert.assertTrue(Math.abs(trace[0] - Atrace[0]) < AbstractComplexMatrix
                 .getEqualThreshold());
-        Assert.assertTrue(Math.abs(trace[1] - A.trace()[1]) < AbstractComplexMatrix
+        Assert.assertTrue(Math.abs(trace[1] - Atrace[1]) < AbstractComplexMatrix
                 .getEqualThreshold());
     }
 
     @Test
-    public void powerTest() {
+    public void powerTest() throws ComplexMatrixNotSPDException {
         ComplexMatrix A = ComplexMatrices.random(new DenseComplexMatrix(40, 50));
 
         ComplexMatrix B = A.hermitianTranspose(new DenseComplexMatrix(A.numColumns(), A.numRows()));
@@ -43,7 +47,7 @@ public class ComplexMatrixTracePowerTest {
         A.set(1, 2, new double[] { -1.30768829630527, 3.03492346633185 });
         power = ComplexMatrices.getPower(A);
 
-        Assert.assertTrue(Math.abs(power - 43.1226670219272) < AbstractComplexMatrix
+        Assert.assertTrue(Math.abs(power - Math.pow(A.norm(Norm.Frobenius), 2)) < AbstractComplexMatrix
                 .getEqualThreshold());
 
         ComplexMatrices.setPower(A, 1.0);

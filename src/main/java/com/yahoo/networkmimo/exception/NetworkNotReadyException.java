@@ -1,6 +1,6 @@
 package com.yahoo.networkmimo.exception;
 
-public class NetworkNotReadyException extends RuntimeException {
+public class NetworkNotReadyException extends Exception {
 
     /**
      * 

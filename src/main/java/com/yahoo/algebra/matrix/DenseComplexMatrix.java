@@ -3,6 +3,8 @@ package com.yahoo.algebra.matrix;
 import org.netlib.lapack.LAPACK;
 import org.netlib.util.intW;
 
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
+
 import no.uib.cipr.matrix.DenseLU;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.MatrixEntry;
@@ -147,9 +149,10 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
     /**
      * Inverse
      */
-    public DenseComplexMatrix inverse() {
+    @Override
+    public ComplexMatrix inverse() throws ComplexMatrixNotSPDException {
         if (!isSquare()) {
-            throw new MatrixNotSPDException();
+            throw new ComplexMatrixNotSPDException();
         }
 
         DenseComplexMatrix A = copy();

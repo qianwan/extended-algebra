@@ -1,7 +1,7 @@
 package com.yahoo.networkmimo;
 
-import com.yahoo.algebra.matrix.DenseComplexMatrix;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 
 public interface MIMOChannel {
-    DenseComplexMatrix generateMIMOChannel(Entity e);
+    ComplexMatrix generateMIMOChannel(Entity e);
 }

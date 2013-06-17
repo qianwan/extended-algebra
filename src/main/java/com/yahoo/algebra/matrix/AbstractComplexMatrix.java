@@ -660,7 +660,8 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         return this;
     }
 
-    public ComplexMatrix hermitianTranspose() {
+    public ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException {
+        //TODO
         throw new ComplexMatrixNotSPDException("in-place Hermitian transpose is not supported now");
     }
 
@@ -685,7 +686,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         return B;
     }
 
-    public ComplexMatrix hermitianTranspose(ComplexMatrix B) {
+    public ComplexMatrix hermitianTranspose(ComplexMatrix B) throws ComplexMatrixNotSPDException {
         checkTranspose(B);
 
         if (B == this) {
@@ -709,6 +710,13 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         if (numColumns != B.numRows())
             throw new IndexOutOfBoundsException("A.numColumns != B.numRows (" + numColumns + " != "
                     + B.numRows() + ")");
+    }
+
+    /**
+     * 
+     */
+    public ComplexMatrix inverse() throws ComplexMatrixNotSPDException {
+        throw new ComplexMatrixNotSPDException("not implemented for abstract complex matrix yet");
     }
 
     public double norm(Norm type) {
@@ -816,7 +824,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         AbstractComplexMatrix.equalThreshold = equalThreshold;
     }
 
-    public double[] trace() {
+    public double[] trace() throws ComplexMatrixNotSPDException {
         if (!isSquare()) {
             throw new ComplexMatrixNotSPDException(
                     "trace operation is not supported for non-square matrix");

@@ -1,5 +1,7 @@
 package com.yahoo.algebra.matrix;
 
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
+
 import no.uib.cipr.matrix.MatrixNotSPDException;
 import no.uib.cipr.matrix.MatrixSingularException;
 
@@ -624,13 +626,17 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     /**
      * Hermitianly transposes the matrix in-place. In most cases, the matrix
      * must be square for this to work.
+     * @throws ComplexMatrixNotSPDException 
      */
-    ComplexMatrix hermitianTranspose();
+    ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException;
 
     /**
      * Sets the Hermitian transpose of this matrix into <code>B</code>.
+     * @throws ComplexMatrixNotSPDException 
      */
-    ComplexMatrix hermitianTranspose(ComplexMatrix B);
+    ComplexMatrix hermitianTranspose(ComplexMatrix B) throws ComplexMatrixNotSPDException;
+
+    ComplexMatrix inverse() throws ComplexMatrixNotSPDException;
 
     /**
      * Computes the given norm of the matrix
@@ -686,6 +692,7 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     /**
      * 
      * @return trace of the matrix
+     * @throws ComplexMatrixNotSPDException 
      */
-    public double[] trace();
+    public double[] trace() throws ComplexMatrixNotSPDException;
 }

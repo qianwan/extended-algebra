@@ -1,6 +1,6 @@
 package com.yahoo.networkmimo.exception;
 
-public class ClusterNotReadyException extends RuntimeException {
+public class ClusterNotReadyException extends Exception {
 
     /**
      * 

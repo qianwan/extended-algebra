@@ -3,6 +3,8 @@ package com.yahoo.algebra.matrix;
 import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
+
 public final class ComplexMatrices {
     private static final GaussianGenerator rng;
 
@@ -81,8 +83,9 @@ public final class ComplexMatrices {
 
     /**
      * Return the power of a matrix
+     * @throws ComplexMatrixNotSPDException 
      */
-    static public double getPower(ComplexMatrix A) {
+    static public double getPower(ComplexMatrix A) throws ComplexMatrixNotSPDException {
         ComplexMatrix B = A.hermitianTranspose(new DenseComplexMatrix(A.numColumns(), A.numRows()));
 
         ComplexMatrix C = B.mult(A, new DenseComplexMatrix(B.numRows(), A.numColumns()));
@@ -91,9 +94,10 @@ public final class ComplexMatrices {
     }
 
     /**
+     * @throws ComplexMatrixNotSPDException 
      * 
      */
-    public static ComplexMatrix setPower(ComplexMatrix A, double power) {
+    public static ComplexMatrix setPower(ComplexMatrix A, double power) throws ComplexMatrixNotSPDException {
         double oldPower = getPower(A);
 
         double[] alpha = new double[] { Math.sqrt(power / oldPower), 0 };

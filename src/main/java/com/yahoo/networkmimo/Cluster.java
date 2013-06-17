@@ -44,13 +44,13 @@ public class Cluster extends Entity {
     }
 
     @Override
-    public DenseComplexMatrix getMIMOChannel(Entity e) {
-        DenseComplexMatrix H = null;
+    public ComplexMatrix getMIMOChannel(Entity e) {
+        ComplexMatrix H = null;
         if (e instanceof UE) {
             H = new DenseComplexMatrix(e.getNumAntennas(), getNumAntennas());
             int columnOffset = 0;
             for (BaseStation bs : getBSs()) {
-                DenseComplexMatrix bsH = bs.getMIMOChannel(e);
+                ComplexMatrix bsH = bs.getMIMOChannel(e);
                 for (ComplexMatrixEntry entry : bsH) {
                     H.set(entry.row(), entry.column() + columnOffset, entry.get());
                 }
@@ -72,7 +72,7 @@ public class Cluster extends Entity {
         }
     }
 
-    public void updateTxPrecodingMatrix() {
+    public void updateTxPrecodingMatrix() throws ClusterNotReadyException {
         isReady();
         for (UE ue : getUEs()) {
             DenseComplexMatrix vik = txPrecodingMatrix.get(ue);

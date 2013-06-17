@@ -1,24 +1,30 @@
 package com.yahoo.networkmimo;
 
+import com.yahoo.algebra.matrix.ComplexMatrices;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
+import com.yahoo.networkmimo.exception.ComplexMatrixNotSPDException;
 
 public class UE extends Entity {
     /**
      * Receiving precoding matrix
      */
-    private DenseComplexMatrix rxPrecodingMatrix = null;
+    private final ComplexMatrix rxPrecodingMatrix;
 
     private int numStreams;
 
     private Cluster cluster;
 
-    public UE(double x, double y, int numAntennas) {
-        super(x, y, Entity.Type.UE, numAntennas);
-    }
+    private Network network;
+
+    // public UE(double x, double y, int numAntennas) {
+    // super(x, y, Entity.Type.UE, numAntennas);
+    // }
 
     public UE(double x, double y, int numAntennas, int numStreams) {
         super(x, y, Entity.Type.UE, numAntennas);
         this.numStreams = numStreams;
+        rxPrecodingMatrix = new DenseComplexMatrix(numStreams, numAntennas);
     }
 
     /**
@@ -39,7 +45,7 @@ public class UE extends Entity {
     /**
      * @return the rxPrecodingMatrix
      */
-    public DenseComplexMatrix getRxPrecodingMatrix() {
+    public ComplexMatrix getRxPrecodingMatrix() {
         return rxPrecodingMatrix;
     }
 
@@ -47,8 +53,8 @@ public class UE extends Entity {
      * @param rxPrecodingMatrix
      *            the rxPrecodingMatrix to set
      */
-    public void setRxPrecodingMatrix(DenseComplexMatrix rxPrecodingMatrix) {
-        this.rxPrecodingMatrix = rxPrecodingMatrix;
+    public void setRxPrecodingMatrix(ComplexMatrix rxPrecodingMatrix) {
+        this.rxPrecodingMatrix.set(rxPrecodingMatrix);
     }
 
     /**
@@ -64,5 +70,41 @@ public class UE extends Entity {
      */
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
+    }
+
+    /**
+     * Calculate rx precoding matrix for
+     */
+    public void calcRxPreMatrix() {
+        ComplexMatrix A = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        A.zero();
+
+        for (Cluster cluster : network.getClusters()) {
+            ComplexMatrix Hikl = cluster.getMIMOChannel(this);
+            for (UE ue : cluster.getUEs()) {
+                ComplexMatrix Vjl = cluster.getTxPrecodingMatrix(ue);
+                ComplexMatrix HV = Hikl.mult(Vjl, new DenseComplexMatrix(Hikl.numRows(), Vjl.numColumns()));
+                ComplexMatrix HVVH = null;
+                try {
+                    HVVH = HV.mult(
+                            HV.hermitianTranspose(new DenseComplexMatrix(HV.numColumns(), HV.numRows())),
+                            new DenseComplexMatrix(HV.numRows(), HV.numRows()));
+                } catch (ComplexMatrixNotSPDException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                A.add(HVVH);
+            }
+        }
+        A.add(ComplexMatrices.eye(getNumAntennas()));
+        
+    }
+
+    public Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(Network network) {
+        this.network = network;
     }
 }
