@@ -22,12 +22,12 @@ public class Network {
     }
 
     public Network addBaseStation(BaseStation bs) {
-        //TODO
+        // TODO
         return this;
     }
 
     public Network reCluster() {
-        //TODO
+        // TODO
         return this;
     }
 
@@ -37,13 +37,16 @@ public class Network {
 
     public void optimize() {
         initialize();
+        updateUERxPreMatrix();
+        updateWeight();
     }
 
     /**
      * Generate a feasible set of txPreMatrix, rxPreMatrix and user weight
-     * @throws  
+     * 
+     * @throws
      */
-    protected void initialize()  {
+    protected void initialize() {
         for (Cluster cluster : clusters) {
             for (BaseStation bs : cluster.getBSs()) {
                 bs.genRandomTxPrecodingMatrix();
@@ -54,7 +57,7 @@ public class Network {
     }
 
     /**
-     * Calculate receive precoding matrix for every UE 
+     * Calculate receive precoding matrix for every UE
      */
     protected void updateUERxPreMatrix() {
         for (Cluster cluster : clusters) {
@@ -68,6 +71,10 @@ public class Network {
      * 
      */
     protected void updateWeight() {
-        
+        for (Cluster cluster : clusters) {
+            for (UE ue : cluster.getUEs()) {
+                ue.updateMMSEWeigh();
+            }
+        }
     }
 }

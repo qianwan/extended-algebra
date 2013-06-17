@@ -44,7 +44,8 @@ public class ClusterTest {
     }
 
     @Test
-    public void txPrecodingMatrixTest() throws NetworkNotReadyException, ClusterNotReadyException, ComplexMatrixNotSPDException {
+    public void txPrecodingMatrixTest() throws NetworkNotReadyException, ClusterNotReadyException,
+            ComplexMatrixNotSPDException {
         Cluster cluster = new Cluster(-1750, -1000);
         cluster.addBaseStation(new BaseStation(-2600, -1400, 4, 20, 2));
         cluster.addBaseStation(new BaseStation(-1700, -1350, 4, 20, 2));

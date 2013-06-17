@@ -631,13 +631,15 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     /**
      * Hermitianly transposes the matrix in-place. In most cases, the matrix
      * must be square for this to work.
-     * @throws ComplexMatrixNotSPDException 
+     * 
+     * @throws ComplexMatrixNotSPDException
      */
     ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException;
 
     /**
      * Sets the Hermitian transpose of this matrix into <code>B</code>.
-     * @throws ComplexMatrixNotSPDException 
+     * 
+     * @throws ComplexMatrixNotSPDException
      */
     ComplexMatrix hermitianTranspose(ComplexMatrix B) throws ComplexMatrixNotSPDException;
 
@@ -697,13 +699,13 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     /**
      * 
      * @return trace of the matrix
-     * @throws ComplexMatrixNotSPDException 
+     * @throws ComplexMatrixNotSPDException
      */
     double[] trace() throws ComplexMatrixNotSPDException;
 
     /**
      * 
-     * @return determinant squared of the complex matrix 
+     * @return determinant squared of the complex matrix
      */
     double det2();
 }

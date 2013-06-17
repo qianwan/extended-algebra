@@ -288,11 +288,14 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
 
     /**
      * chained multiplying, not supported for abstract matrix class
-     * @param B multiplier
+     * 
+     * @param B
+     *            multiplier
      * @return
      */
     public ComplexMatrix mult(ComplexMatrix B) {
-        throw new ComplexMatrixNotSPDException("chain mulpiplying is not supported for AbstractComplexMatrix");
+        throw new ComplexMatrixNotSPDException(
+                "chain mulpiplying is not supported for AbstractComplexMatrix");
     }
 
     public ComplexMatrix mult(ComplexMatrix B, ComplexMatrix C) {
@@ -670,7 +673,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
     }
 
     public ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException {
-        //TODO
+        // TODO
         throw new ComplexMatrixNotSPDException("in-place Hermitian transpose is not supported now");
     }
 

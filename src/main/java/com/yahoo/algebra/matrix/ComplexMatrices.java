@@ -83,7 +83,8 @@ public final class ComplexMatrices {
 
     /**
      * Return the power of a matrix
-     * @throws ComplexMatrixNotSPDException 
+     * 
+     * @throws ComplexMatrixNotSPDException
      */
     static public double getPower(ComplexMatrix A) throws ComplexMatrixNotSPDException {
         ComplexMatrix B = A.hermitianTranspose(new DenseComplexMatrix(A.numColumns(), A.numRows()));
@@ -94,10 +95,11 @@ public final class ComplexMatrices {
     }
 
     /**
-     * @throws ComplexMatrixNotSPDException 
+     * @throws ComplexMatrixNotSPDException
      * 
      */
-    public static ComplexMatrix setPower(ComplexMatrix A, double power) throws ComplexMatrixNotSPDException {
+    public static ComplexMatrix setPower(ComplexMatrix A, double power)
+            throws ComplexMatrixNotSPDException {
         double oldPower = getPower(A);
 
         double[] alpha = new double[] { Math.sqrt(power / oldPower), 0 };
