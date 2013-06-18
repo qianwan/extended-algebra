@@ -634,14 +634,14 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
      * 
      * @throws ComplexMatrixNotSPDException
      */
-    ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException;
+    ComplexMatrix hermitianTranspose();
 
     /**
      * Sets the Hermitian transpose of this matrix into <code>B</code>.
      * 
      * @throws ComplexMatrixNotSPDException
      */
-    ComplexMatrix hermitianTranspose(ComplexMatrix B) throws ComplexMatrixNotSPDException;
+    ComplexMatrix hermitianTranspose(ComplexMatrix B);
 
     ComplexMatrix inverse() throws ComplexMatrixNotSPDException;
 

@@ -672,7 +672,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         return this;
     }
 
-    public ComplexMatrix hermitianTranspose() throws ComplexMatrixNotSPDException {
+    public ComplexMatrix hermitianTranspose() {
         // TODO
         throw new ComplexMatrixNotSPDException("in-place Hermitian transpose is not supported now");
     }
@@ -698,7 +698,7 @@ public abstract class AbstractComplexMatrix implements ComplexMatrix {
         return B;
     }
 
-    public ComplexMatrix hermitianTranspose(ComplexMatrix B) throws ComplexMatrixNotSPDException {
+    public ComplexMatrix hermitianTranspose(ComplexMatrix B) {
         checkTranspose(B);
 
         if (B == this) {

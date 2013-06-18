@@ -8,13 +8,15 @@ public class UE extends Entity {
     /**
      * Receiving precoding matrix
      */
-    private final ComplexMatrix rxPrecodingMatrix;
+    private final ComplexMatrix rxPreMatrix;
 
     private int numStreams;
 
     private Cluster cluster;
 
     private Network network;
+
+    private ComplexMatrix dMatrix;
 
     /**
      * Weight matrix for MMSE
@@ -33,7 +35,7 @@ public class UE extends Entity {
     public UE(double x, double y, int numAntennas, int numStreams) {
         super(x, y, Entity.Type.UE, numAntennas);
         this.numStreams = numStreams;
-        rxPrecodingMatrix = new DenseComplexMatrix(numAntennas, numStreams);
+        rxPreMatrix = new DenseComplexMatrix(numAntennas, numStreams);
         mmseWeight = new DenseComplexMatrix(numStreams, numStreams);
     }
 
@@ -55,8 +57,8 @@ public class UE extends Entity {
     /**
      * @return the rxPrecodingMatrix
      */
-    public ComplexMatrix getRxPrecodingMatrix() {
-        return rxPrecodingMatrix;
+    public ComplexMatrix getRxPreMatrix() {
+        return rxPreMatrix;
     }
 
     /**
@@ -64,7 +66,7 @@ public class UE extends Entity {
      *            the rxPrecodingMatrix to set
      */
     public void setRxPrecodingMatrix(ComplexMatrix rxPrecodingMatrix) {
-        this.rxPrecodingMatrix.set(rxPrecodingMatrix);
+        this.rxPreMatrix.set(rxPrecodingMatrix);
     }
 
     /**
@@ -92,11 +94,10 @@ public class UE extends Entity {
         for (Cluster cluster : network.getClusters()) {
             ComplexMatrix Hikl = cluster.getMIMOChannel(this);
             for (UE ue : cluster.getUEs()) {
-                ComplexMatrix Vjl = cluster.getTxPrecodingMatrix(ue);
-                ComplexMatrix HV = Hikl.mult(Vjl,
-                        new DenseComplexMatrix(Hikl.numRows(), Vjl.numColumns()));
-                ComplexMatrix HVVH = HV.mult(HV.hermitianTranspose(new DenseComplexMatrix(HV
-                        .numColumns(), HV.numRows())),
+                ComplexMatrix Vjl = cluster.getTxPreMatrix(ue);
+                ComplexMatrix HV = Hikl.mult(Vjl, new DenseComplexMatrix(Hikl.numRows(), Vjl.numColumns()));
+                ComplexMatrix HVVH = HV.mult(
+                        HV.hermitianTranspose(new DenseComplexMatrix(HV.numColumns(), HV.numRows())),
                         new DenseComplexMatrix(HV.numRows(), HV.numRows()));
                 C.add(HVVH);
             }
@@ -104,24 +105,22 @@ public class UE extends Entity {
 
         ComplexMatrix A = new DenseComplexMatrix(C.numRows(), C.numColumns());
         A.set(C);
-        ComplexMatrix HikVik = cluster.getMIMOChannel(this)
-                .mult(cluster.getTxPrecodingMatrix(this));
-        ComplexMatrix HikVikT = HikVik.hermitianTranspose(new DenseComplexMatrix(HikVik
-                .numColumns(), HikVik.numRows()));
+        ComplexMatrix HikVik = cluster.getMIMOChannel(this).mult(cluster.getTxPreMatrix(this));
+        ComplexMatrix HikVikT = HikVik
+                .hermitianTranspose(new DenseComplexMatrix(HikVik.numColumns(), HikVik.numRows()));
         ComplexMatrix HVVHik = HikVik.mult(HikVikT);
         A.add(new double[] { -1, 0 }, HVVHik);
-        setRate(0.5
-                * Math.log(HVVHik.mult(A.inverse()).add(ComplexMatrices.eye(getNumAntennas()))
-                        .det2()) / Math.log(2.0));
+
+        setRate(0.5 * Math.log(HVVHik.mult(A.inverse()).add(ComplexMatrices.eye(getNumAntennas())).det2())
+                / Math.log(2.0));
 
         C.add(ComplexMatrices.eye(getNumAntennas()));
         C = C.inverse();
         ComplexMatrix Hkik = cluster.getMIMOChannel(this);
         ComplexMatrix C_1H = C.mult(Hkik, new DenseComplexMatrix(C.numRows(), Hkik.numColumns()));
-        ComplexMatrix Vik = cluster.getTxPrecodingMatrix(this);
-        ComplexMatrix Uik = C_1H
-                .mult(Vik, new DenseComplexMatrix(C_1H.numRows(), Vik.numColumns()));
-        rxPrecodingMatrix.set(Uik);
+        ComplexMatrix Vik = cluster.getTxPreMatrix(this);
+        ComplexMatrix Uik = C_1H.mult(Vik, new DenseComplexMatrix(C_1H.numRows(), Vik.numColumns()));
+        rxPreMatrix.set(Uik);
     }
 
     public Network getNetwork() {
@@ -140,10 +139,9 @@ public class UE extends Entity {
     }
 
     public ComplexMatrix updateMMSEWeigh() {
-        ComplexMatrix U_ = rxPrecodingMatrix.hermitianTranspose(new DenseComplexMatrix(
-                rxPrecodingMatrix.numColumns(), rxPrecodingMatrix.numRows()));
-        ComplexMatrix uHv = U_.mult(cluster.getMIMOChannel(this)).mult(
-                cluster.getTxPrecodingMatrix(this));
+        ComplexMatrix U_ = rxPreMatrix.hermitianTranspose(new DenseComplexMatrix(rxPreMatrix.numColumns(),
+                rxPreMatrix.numRows()));
+        ComplexMatrix uHv = U_.mult(cluster.getMIMOChannel(this)).mult(cluster.getTxPreMatrix(this));
         mmseWeight.set(ComplexMatrices.eye(numStreams).add(new double[] { -1, 0 }, uHv).inverse()
                 .scale(new double[] { 1.0 / rate, 0 }));
         return mmseWeight;
@@ -170,5 +168,15 @@ public class UE extends Entity {
      */
     public void setRate(double rate) {
         this.rate = rate;
+    }
+
+    public ComplexMatrix calcDMatrix() {
+        dMatrix.set(cluster.getMIMOChannel(this).hermitianTranspose().mult(rxPreMatrix)
+                .scale(mmseWeight.get(0, 0)));
+        return dMatrix;
+    }
+
+    public void alloc() {
+        dMatrix = new DenseComplexMatrix(cluster.getNumAntennas(), numStreams);
     }
 }

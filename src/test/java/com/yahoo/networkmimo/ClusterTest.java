@@ -57,15 +57,15 @@ public class ClusterTest {
         cluster.addUE(new UE(-1250, -1250, 2, 2));
 
         for (BaseStation bs : cluster.getBSs()) {
-            bs.genRandomTxPrecodingMatrix();
+            bs.genRandomTxPreMatrix();
         }
-        cluster.initTxPrecodingMatrix();
+        cluster.alloc();
         cluster.updateTxPrecodingMatrix();
         for (UE ue : cluster.getUEs()) {
-            ComplexMatrix Vik = cluster.getTxPrecodingMatrix(ue);
+            ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
             int rowOffset = 0;
             for (BaseStation bs : cluster.getBSs()) {
-                for (ComplexMatrixEntry e : bs.getTxPrecodingMatrix(ue)) {
+                for (ComplexMatrixEntry e : bs.getTxPreMatrix(ue)) {
                     Assert.assertEquals(e.get()[0], Vik.get(e.row() + rowOffset, e.column())[0], 0);
                     Assert.assertEquals(e.get()[1], Vik.get(e.row() + rowOffset, e.column())[1], 0);
                 }
@@ -77,19 +77,23 @@ public class ClusterTest {
 
         Network network = new Network();
         network.addCluster(cluster);
+        for (BaseStation bs : cluster.getBSs()) {
+            bs.genRandomTxPreMatrix();
+        }
+        cluster.updateTxPrecodingMatrix();
         for (UE ue : cluster.getUEs()) {
             ue.calcRxPreMatrixAndRate();
         }
 
         for (BaseStation bs : cluster.getBSs()) {
-            bs.genRandomTxPrecodingMatrix();
+            bs.genRandomTxPreMatrix();
         }
         cluster.updateTxPrecodingMatrix();
         for (UE ue : cluster.getUEs()) {
-            ComplexMatrix Vik = cluster.getTxPrecodingMatrix(ue);
+            ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
             int rowOffset = 0;
             for (BaseStation bs : cluster.getBSs()) {
-                for (ComplexMatrixEntry e : bs.getTxPrecodingMatrix(ue)) {
+                for (ComplexMatrixEntry e : bs.getTxPreMatrix(ue)) {
                     Assert.assertEquals(e.get()[0], Vik.get(e.row() + rowOffset, e.column())[0], 0);
                     Assert.assertEquals(e.get()[1], Vik.get(e.row() + rowOffset, e.column())[1], 0);
                 }

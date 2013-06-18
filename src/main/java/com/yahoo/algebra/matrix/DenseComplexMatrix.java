@@ -165,7 +165,7 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         LAPACK.getInstance().dgetrf(m, m, aData, m, piv, info);
 
         if (info.val != 0)
-            return null;
+            throw new ComplexMatrixNotSPDException("matrix is not valid");
         int lwork = m;
         double[] work = new double[m];
 
@@ -213,6 +213,13 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         ComplexMatrix C = new DenseComplexMatrix(numRows(), B.numColumns());
         checkMultAdd(B, C);
         return mult(B, C);
+    }
+
+    @Override
+    public ComplexMatrix hermitianTranspose() {
+        ComplexMatrix B = new DenseComplexMatrix(numColumns(), numRows());
+        hermitianTranspose(B);
+        return B;
     }
 
     // @Override

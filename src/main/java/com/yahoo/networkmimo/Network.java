@@ -11,6 +11,7 @@ public class Network {
     }
 
     public Network addCluster(Cluster cluster) {
+        cluster.setNetwork(this);
         clusters.add(cluster);
         for (BaseStation bs : cluster.getBSs()) {
             bs.setNetwork(this);
@@ -36,9 +37,22 @@ public class Network {
     }
 
     public void optimize() {
-        initialize();
-        updateUERxPreMatrix();
-        updateWeight();
+        alloc();
+        for (int i = 0; i < 10; ++i) {
+            updateUERxPreMatrix();
+            updateWeight();
+            for (Cluster cluster : clusters) {
+                cluster.calcJMatrix();
+                for (UE ue : cluster.getUEs()) {
+                    ue.calcDMatrix();
+                }
+            }
+            for (Cluster cluster : clusters) {
+                for (@SuppressWarnings("unused") BaseStation bs : cluster.getBSs()) {
+                    // TODO
+                }
+            }
+        }
     }
 
     /**
@@ -46,13 +60,9 @@ public class Network {
      * 
      * @throws
      */
-    protected void initialize() {
+    protected void alloc() {
         for (Cluster cluster : clusters) {
-            for (BaseStation bs : cluster.getBSs()) {
-                bs.genRandomTxPrecodingMatrix();
-            }
-            cluster.initTxPrecodingMatrix();
-            cluster.updateTxPrecodingMatrix();
+            cluster.alloc();
         }
     }
 

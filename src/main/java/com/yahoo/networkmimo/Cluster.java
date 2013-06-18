@@ -16,11 +16,19 @@ import com.yahoo.networkmimo.exception.ClusterNotReadyException;
 public class Cluster extends Entity {
     private final static Logger logger = LoggerFactory.getLogger(Cluster.class);
 
+    private Network network;
+
     private final List<BaseStation> bss = new ArrayList<BaseStation>();
 
     private final List<UE> ues = new ArrayList<UE>();
 
-    private final Map<UE, DenseComplexMatrix> txPrecodingMatrix = Maps.newHashMap();
+    private final Map<UE, DenseComplexMatrix> txPreMatrix = Maps.newHashMap();
+
+    private ComplexMatrix jMatrix;
+
+    public ComplexMatrix getJMatrix() {
+        return jMatrix;
+    }
 
     public Cluster() {
         super();
@@ -65,20 +73,19 @@ public class Cluster extends Entity {
 
     public void initTxPrecodingMatrix() {
         for (UE ue : getUEs()) {
-            if (txPrecodingMatrix.get(ue) == null) {
-                txPrecodingMatrix.put(ue,
-                        new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+            if (txPreMatrix.get(ue) == null) {
+                txPreMatrix.put(ue, new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
             }
         }
     }
 
-    public void updateTxPrecodingMatrix() throws ClusterNotReadyException {
+    public void updateTxPrecodingMatrix() {
         isReady();
         for (UE ue : getUEs()) {
-            DenseComplexMatrix vik = txPrecodingMatrix.get(ue);
+            DenseComplexMatrix vik = txPreMatrix.get(ue);
             int rowOffset = 0;
             for (BaseStation bs : getBSs()) {
-                ComplexMatrix vikq = bs.getTxPrecodingMatrix(ue);
+                ComplexMatrix vikq = bs.getTxPreMatrix(ue);
                 for (ComplexMatrixEntry entry : vikq) {
                     vik.set(entry.row() + rowOffset, entry.column(), entry.get());
                 }
@@ -101,13 +108,13 @@ public class Cluster extends Entity {
         return ues;
     }
 
-    public ComplexMatrix getTxPrecodingMatrix(UE ue) {
-        return txPrecodingMatrix.get(ue);
+    public ComplexMatrix getTxPreMatrix(UE ue) {
+        return txPreMatrix.get(ue);
     }
 
-    public void isReady() throws ClusterNotReadyException {
+    public void isReady() {
         for (UE ue : getUEs()) {
-            ComplexMatrix Vik = txPrecodingMatrix.get(ue);
+            ComplexMatrix Vik = txPreMatrix.get(ue);
             if (Vik == null) {
                 throw new ClusterNotReadyException("tx precoding matrix for ue is null");
             } else {
@@ -116,6 +123,45 @@ public class Cluster extends Entity {
                             "cluster configuration is not compatabile with size of tx precoding matrix");
                 }
             }
+        }
+    }
+
+    public ComplexMatrix calcJMatrix() {
+        // H^H * u * u^H * H
+        jMatrix.zero();
+        for (Cluster cluster : network.getClusters()) {
+            for (UE ue : cluster.getUEs()) {
+                ComplexMatrix Hhu = getMIMOChannel(ue).hermitianTranspose().mult(ue.getRxPreMatrix());
+                ComplexMatrix HuuH = Hhu.mult(Hhu.hermitianTranspose());
+                // TODO for numStreams == 1
+                HuuH.scale(ue.getMMSEWeight().get(0, 0));
+                jMatrix.add(HuuH);
+            }
+        }
+        return jMatrix;
+    }
+
+    public Network getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(Network network) {
+        this.network = network;
+    }
+
+    public void alloc() {
+        // self init
+        jMatrix = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        for (UE ue : ues) {
+            txPreMatrix.put(ue, new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+            mimoChannels.put(ue, new DenseComplexMatrix(ue.getNumAntennas(), getNumAntennas()));
+        }
+        // component init
+        for (BaseStation bs : bss) {
+            bs.alloc();
+        }
+        for (UE ue : ues) {
+            ue.alloc();
         }
     }
 }

@@ -7,10 +7,11 @@ import com.beust.jcommander.internal.Maps;
 import com.yahoo.algebra.matrix.ComplexMatrices;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
+import com.yahoo.networkmimo.exception.ClusterNotReadyException;
 import com.yahoo.networkmimo.exception.NetworkNotReadyException;
 
 public class BaseStation extends Entity {
-    private Map<UE, ComplexMatrix> txPrecodingMatrix = Maps.newHashMap();
+    private Map<UE, ComplexMatrix> txPreMatrix = Maps.newHashMap();
 
     private Cluster cluster;
 
@@ -33,12 +34,18 @@ public class BaseStation extends Entity {
         setLambda(lambda);
     }
 
-    public void setTxPrecodingMatrx(UE ue, DenseComplexMatrix v) {
-        txPrecodingMatrix.put(ue, v);
+    public void setTxPreMatrix(UE ue, ComplexMatrix v) {
+        if (!cluster.getUEs().contains(ue)) {
+            throw new ClusterNotReadyException("The cluster where the bs belongs does not contain ue");
+        }
+        txPreMatrix.put(ue, v);
     }
 
-    public ComplexMatrix getTxPrecodingMatrix(UE ue) {
-        return txPrecodingMatrix.get(ue);
+    public ComplexMatrix getTxPreMatrix(UE ue) {
+        if (!cluster.getUEs().contains(ue)) {
+            throw new ClusterNotReadyException("The cluster where the bs belongs does not contain ue");
+        }
+        return txPreMatrix.get(ue);
     }
 
     /**
@@ -86,7 +93,7 @@ public class BaseStation extends Entity {
         this.lambda = lambda;
     }
 
-    public void genRandomTxPrecodingMatrix() {
+    public void genRandomTxPreMatrix() {
         Cluster cluster = getCluster();
         if (cluster == null) {
             throw new NetworkNotReadyException("This basestation is not added to any cluster");
@@ -99,7 +106,7 @@ public class BaseStation extends Entity {
         for (UE ue : ues) {
             ComplexMatrix v = ComplexMatrices.random(new DenseComplexMatrix(getNumAntennas(), ue
                     .getNumStreams()));
-            txPrecodingMatrix.put(ue, ComplexMatrices.setPower(v, powerPerUE));
+            txPreMatrix.put(ue, ComplexMatrices.setPower(v, powerPerUE));
         }
     }
 
@@ -109,5 +116,11 @@ public class BaseStation extends Entity {
 
     public void setNetwork(Network network) {
         this.network = network;
+    }
+
+    public void alloc() {
+        for (UE ue : cluster.getUEs()) {
+            txPreMatrix.put(ue, new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+        }
     }
 }

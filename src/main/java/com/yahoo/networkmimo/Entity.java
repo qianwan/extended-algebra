@@ -35,7 +35,7 @@ public abstract class Entity implements MIMOChannel {
         BS, CLUSTER, UE, UNKNOWN
     };
 
-    Type t = Type.UNKNOWN;
+    private Type t = Type.UNKNOWN;
 
     public Entity() {
         this(0, 0, Type.UNKNOWN, 0);
@@ -80,7 +80,7 @@ public abstract class Entity implements MIMOChannel {
         this.t = t;
     }
 
-    public ComplexMatrix generateMIMOChannel(Entity e) {
+    public ComplexMatrix genMIMOChannel(Entity e) {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double[] p = e.getXY();
@@ -97,7 +97,7 @@ public abstract class Entity implements MIMOChannel {
     public ComplexMatrix getMIMOChannel(Entity e) {
         ComplexMatrix H = mimoChannels.get(e);
         if (H == null) {
-            H = generateMIMOChannel(e);
+            H = genMIMOChannel(e);
             mimoChannels.put(e, H);
         }
         return H;
