@@ -32,6 +32,13 @@ public class UE extends Entity {
     // super(x, y, Entity.Type.UE, numAntennas);
     // }
 
+    /**
+     * 
+     * @param x x-axis
+     * @param y y-axis
+     * @param numAntennas number of antennas
+     * @param numStreams number of data streams
+     */
     public UE(double x, double y, int numAntennas, int numStreams) {
         super(x, y, Entity.Type.UE, numAntennas);
         this.numStreams = numStreams;

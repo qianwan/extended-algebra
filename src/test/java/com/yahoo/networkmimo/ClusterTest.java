@@ -60,7 +60,7 @@ public class ClusterTest {
             bs.genRandomTxPreMatrix();
         }
         cluster.alloc();
-        cluster.updateTxPrecodingMatrix();
+        cluster.assembleTxPreMatrix();
         for (UE ue : cluster.getUEs()) {
             ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
             int rowOffset = 0;
@@ -80,7 +80,7 @@ public class ClusterTest {
         for (BaseStation bs : cluster.getBSs()) {
             bs.genRandomTxPreMatrix();
         }
-        cluster.updateTxPrecodingMatrix();
+        cluster.assembleTxPreMatrix();
         for (UE ue : cluster.getUEs()) {
             ue.calcRxPreMatrixAndRate();
         }
@@ -88,7 +88,7 @@ public class ClusterTest {
         for (BaseStation bs : cluster.getBSs()) {
             bs.genRandomTxPreMatrix();
         }
-        cluster.updateTxPrecodingMatrix();
+        cluster.assembleTxPreMatrix();
         for (UE ue : cluster.getUEs()) {
             ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
             int rowOffset = 0;

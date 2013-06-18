@@ -87,4 +87,15 @@ public class Network {
             }
         }
     }
+
+    public void init() {
+        for (Cluster cluster : clusters) {
+            cluster.genRandomTxPreMatrix();
+            for (Cluster c : clusters) {
+                for (UE ue : c.getUEs()) {
+                    cluster.genMIMOChannel(ue);
+                }
+            }
+        }
+    }
 }

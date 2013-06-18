@@ -28,6 +28,14 @@ public class BaseStation extends Entity {
         super(x, y, Entity.Type.BS, numAntennas);
     }
 
+    /**
+     * 
+     * @param x x-axis
+     * @param y y-axis
+     * @param numAntennas number of antennas
+     * @param powerBudget maximum transmit power
+     * @param lambda penalty parameter for sparse beamforming
+     */
     public BaseStation(double x, double y, int numAntennas, double powerBudget, double lambda) {
         super(x, y, Entity.Type.BS, numAntennas);
         setPowerBudget(powerBudget);

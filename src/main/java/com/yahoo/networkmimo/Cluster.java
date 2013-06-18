@@ -22,6 +22,9 @@ public class Cluster extends Entity {
 
     private final List<UE> ues = new ArrayList<UE>();
 
+    /**
+     * transmit precoding matrix for every UE in this cluster
+     */
     private final Map<UE, DenseComplexMatrix> txPreMatrix = Maps.newHashMap();
 
     private ComplexMatrix jMatrix;
@@ -40,15 +43,19 @@ public class Cluster extends Entity {
         setType(Entity.Type.CLUSTER);
     }
 
-    public void addBaseStation(BaseStation bs) {
+    public Cluster addBaseStation(BaseStation bs) {
         getBSs().add(bs);
         bs.setCluster(this);
+        bs.setNetwork(network);
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
+        return this;
     }
 
-    public void addUE(UE ue) {
+    public Cluster addUE(UE ue) {
         getUEs().add(ue);
         ue.setCluster(this);
+        ue.setNetwork(network);
+        return this;
     }
 
     @Override
@@ -79,10 +86,10 @@ public class Cluster extends Entity {
         }
     }
 
-    public void updateTxPrecodingMatrix() {
+    public void assembleTxPreMatrix() {
         isReady();
         for (UE ue : getUEs()) {
-            DenseComplexMatrix vik = txPreMatrix.get(ue);
+            ComplexMatrix vik = txPreMatrix.get(ue);
             int rowOffset = 0;
             for (BaseStation bs : getBSs()) {
                 ComplexMatrix vikq = bs.getTxPreMatrix(ue);
@@ -118,7 +125,7 @@ public class Cluster extends Entity {
             if (Vik == null) {
                 throw new ClusterNotReadyException("tx precoding matrix for ue is null");
             } else {
-                if (Vik.numRows() != getNumAntennas() || Vik.numColumns() != ue.getNumAntennas()) {
+                if (Vik.numRows() != getNumAntennas() || Vik.numColumns() != ue.getNumStreams()) {
                     throw new ClusterNotReadyException(
                             "cluster configuration is not compatabile with size of tx precoding matrix");
                 }
@@ -162,6 +169,32 @@ public class Cluster extends Entity {
         }
         for (UE ue : ues) {
             ue.alloc();
+        }
+    }
+
+    public void genRandomTxPreMatrix() {
+        for (BaseStation bs : bss) {
+            bs.genRandomTxPreMatrix();
+        }
+        assembleTxPreMatrix();
+    }
+
+    /**
+     * 
+     * @param ue UE
+     */
+    public void genMIMOChannel(UE ue) {
+        for (BaseStation bs : bss) {
+            bs.genMIMOChannel(ue);
+        }
+        ComplexMatrix H = mimoChannels.get(ue);
+        int columnOffset = 0;
+        for (BaseStation bs : bss) {
+            ComplexMatrix bsH = bs.getMIMOChannel(ue);
+            for (ComplexMatrixEntry entry : bsH) {
+                H.set(entry.row(), entry.column() + columnOffset, entry.get());
+            }
+            columnOffset += bs.getNumAntennas();
         }
     }
 }
