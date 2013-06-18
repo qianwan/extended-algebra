@@ -6,8 +6,14 @@ import java.util.List;
 public class Network {
     private final List<Cluster> clusters;
 
+    private final List<BaseStation> bss;
+
+    private final List<UE> ues;
+
     public Network() {
         clusters = new ArrayList<Cluster>();
+        bss = new ArrayList<BaseStation>();
+        ues = new ArrayList<UE>();
     }
 
     public Network addCluster(Cluster cluster) {
@@ -15,15 +21,28 @@ public class Network {
         clusters.add(cluster);
         for (BaseStation bs : cluster.getBSs()) {
             bs.setNetwork(this);
+            bss.add(bs);
         }
         for (UE ue : cluster.getUEs()) {
             ue.setNetwork(this);
+            ues.add(ue);
         }
         return this;
     }
 
     public Network addBaseStation(BaseStation bs) {
-        // TODO
+        bss.add(bs);
+        if (bs.getCluster()==null) {
+            // TODO add this bs to a cluster
+        }
+        return this;
+    }
+
+    public Network addUE(UE ue) {
+        ues.add(ue);
+        if (ue.getCluster()==null) {
+            // TODO add this ue to a cluster
+        }
         return this;
     }
 
@@ -34,6 +53,14 @@ public class Network {
 
     public List<Cluster> getClusters() {
         return clusters;
+    }
+
+    public List<BaseStation> getBSs() {
+        return bss;
+    }
+
+    public List<UE> getUEs() {
+        return ues;
     }
 
     public void optimize() {
@@ -56,7 +83,7 @@ public class Network {
     }
 
     /**
-     * Generate a feasible set of txPreMatrix, rxPreMatrix and user weight
+     * alloc txPreMatrix, rxPreMatrix and user weight
      * 
      * @throws
      */

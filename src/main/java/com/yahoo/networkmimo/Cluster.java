@@ -47,6 +47,9 @@ public class Cluster extends Entity {
         getBSs().add(bs);
         bs.setCluster(this);
         bs.setNetwork(network);
+        if (network!=null) {
+            network.addBaseStation(bs);
+        }
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
         return this;
     }
@@ -55,6 +58,9 @@ public class Cluster extends Entity {
         getUEs().add(ue);
         ue.setCluster(this);
         ue.setNetwork(network);
+        if (network!=null) {
+            network.addUE(ue);
+        }
         return this;
     }
 
