@@ -167,6 +167,8 @@ public class Cluster extends Entity {
         jMatrix = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
         for (UE ue : ues) {
             txPreMatrix.put(ue, new DenseComplexMatrix(getNumAntennas(), ue.getNumStreams()));
+        }
+        for (UE ue : network!=null ? network.getUEs() : ues) {
             mimoChannels.put(ue, new DenseComplexMatrix(ue.getNumAntennas(), getNumAntennas()));
         }
         // component init
@@ -194,6 +196,7 @@ public class Cluster extends Entity {
             bs.genMIMOChannel(ue);
         }
         ComplexMatrix H = mimoChannels.get(ue);
+        if (H==null) System.out.println("WTF");
         int columnOffset = 0;
         for (BaseStation bs : bss) {
             ComplexMatrix bsH = bs.getMIMOChannel(ue);

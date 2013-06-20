@@ -1,5 +1,6 @@
 package com.yahoo.networkmimo;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class NetworkTest {
@@ -7,15 +8,7 @@ public class NetworkTest {
     public void testIt() {
         Network network = new Network();
 
-        network.addCluster(new Cluster(-1750, -1000));
-        network.getClusters().get(0).addBaseStation(new BaseStation(-2600, -1400, 4, 100, 2))
-                .addBaseStation(new BaseStation(-1700, -1350, 4, 100, 2))
-                .addBaseStation(new BaseStation(-1740, -1050, 4, 100, 2))
-                .addBaseStation(new BaseStation(-1500, -1200, 4, 100, 2))
-                .addBaseStation(new BaseStation(-1350, -1000, 4, 100, 2))
-                .addUE(new UE(-2250, -500, 2, 1))
-                .addUE(new UE(-1500, -650, 2, 1))
-                .addUE(new UE(-1250, -1250, 2, 1));
+        initNetwork(network);
 
         network.alloc();
         network.init();
@@ -41,5 +34,44 @@ public class NetworkTest {
         }
         long toc = System.currentTimeMillis();
         System.out.println(toc - tic);
+    }
+
+    @Test
+    public void networkOrganizationTest() {
+        Network network = new Network();
+        initNetwork(network);
+
+        int expected = 0;
+        for (Cluster cluster : network.getClusters()) {
+            expected += cluster.getBSs().size();
+        }
+        Assert.assertTrue(network.getBSs().size() == expected);
+
+        expected = 0;
+        for (Cluster cluster : network.getClusters()) {
+            expected += cluster.getUEs().size();
+        }
+        Assert.assertTrue(network.getUEs().size() == expected);
+
+        for (Cluster cluster : network.getClusters()) {
+            Assert.assertTrue(network.getBSs().containsAll(cluster.getBSs()));
+            Assert.assertTrue(network.getUEs().containsAll(cluster.getUEs()));
+        }
+    }
+
+    public void initNetwork(Network network) {
+        network.addCluster(new Cluster(0, 0));
+        network.addCluster(new Cluster(0, 2000));
+        network.addCluster(new Cluster(0, -2000));
+        for (Cluster cluster : network.getClusters()) {
+            for (int i = 0; i < 4; i++) {
+                cluster.addBaseStation(new BaseStation(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster
+                        .getXY()[1] + (0.5 - Math.random()) * 2000, 4, 100, 2));
+            }
+            for (int i = 0; i < 4; i++) {
+                cluster.addUE(new UE(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster.getXY()[1]
+                        + (0.5 - Math.random()) * 2000, 2, 1));
+            }
+        }
     }
 }
