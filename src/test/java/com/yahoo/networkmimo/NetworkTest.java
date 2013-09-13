@@ -5,40 +5,15 @@ import org.testng.annotations.Test;
 
 public class NetworkTest {
     @Test
-    public void testIt() {
-        Network network = new Network();
-
+    public void refreshTest() {
+        Network network = new Network(1);
         initNetwork(network);
-
-        network.alloc();
-        network.init();
-        long tic = System.currentTimeMillis();
-        for (int i = 0; i < 2; i++) {
-            for (UE ue : network.getUEs()) {
-                ue.calcRxPreMatrixAndRate();
-            }
-            for (UE ue : network.getUEs()) {
-                ue.updateMMSEWeigh();
-            }
-            for (Cluster cluster : network.getClusters()) {
-                cluster.calcJMatrix();
-                for (UE ue : cluster.getUEs()) {
-                    ue.calcDMatrix();
-                }
-                for (int j = 0; j < 10; j++) {
-                    for (BaseStation bs : cluster.getBSs()) {
-                        
-                    }
-                }
-            }
-        }
-        long toc = System.currentTimeMillis();
-        System.out.println(toc - tic);
+        network.refresh();
     }
 
     @Test
     public void networkOrganizationTest() {
-        Network network = new Network();
+        Network network = new Network(1);
         initNetwork(network);
 
         int expected = 0;
@@ -65,13 +40,14 @@ public class NetworkTest {
         network.addCluster(new Cluster(0, -2000));
         for (Cluster cluster : network.getClusters()) {
             for (int i = 0; i < 4; i++) {
-                cluster.addBaseStation(new BaseStation(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster
-                        .getXY()[1] + (0.5 - Math.random()) * 2000, 4, 100, 2));
+                cluster.addBaseStation(new BaseStation(cluster.getXY()[0] + (0.5 - Math.random())
+                        * 2000, cluster.getXY()[1] + (0.5 - Math.random()) * 2000, 4, 10));
             }
             for (int i = 0; i < 4; i++) {
-                cluster.addUE(new UE(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster.getXY()[1]
-                        + (0.5 - Math.random()) * 2000, 2, 1));
+                cluster.addUE(new UE(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster
+                        .getXY()[1] + (0.5 - Math.random()) * 2000, 2, 1));
             }
         }
     }
+
 }

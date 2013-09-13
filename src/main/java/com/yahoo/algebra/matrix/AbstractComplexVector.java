@@ -115,15 +115,44 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
         return this;
     }
 
+    public ComplexMatrix mult(ComplexVector y, ComplexMatrix A) {
+        if (size != y.size() || A.numRows() != size || A.numColumns() != size) {
+            throw new IndexOutOfBoundsException("size != y.size (" + size + " != " + y.size()
+                    + " ) || " + "A.row != size (" + A.numRows() + " != " + size + ") || "
+                    + "A.column != size (" + A.numColumns() + " != " + size() + ")");
+        }
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                A.set(i, j, Complexes.mult(get(i), y.get(j)));
+            }
+        }
+        return A;
+    }
+
     public double[] dot(ComplexVector y) {
         checkSize(y);
 
         double[] ret = new double[] { 0, 0 };
         for (ComplexVectorEntry e : this) {
             ret = Complexes
-                    .add(ret, Complexes.mult(e.get(), Complexes.conjugate(y.get(e.index()))));
+                    .add(ret, Complexes.mult(Complexes.conjugate(e.get()), y.get(e.index())));
         }
         return ret;
+    }
+
+    public ComplexVector conjugate() {
+        for (int i = 0; i < size(); i++) {
+            set(i, Complexes.conjugate(get(i)));
+        }
+        return this;
+    }
+
+    public ComplexVector conjugate(ComplexVector y) {
+        checkSize(y);
+        for (int i = 0; i < size; i++) {
+            y.set(i, Complexes.conjugate(get(i)));
+        }
+        return y;
     }
 
     /**

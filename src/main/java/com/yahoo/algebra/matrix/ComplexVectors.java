@@ -23,7 +23,7 @@ public class ComplexVectors {
 
     public static ComplexVector setPower(ComplexVector A, double power) {
         double currentPower = getPower(A);
-        A.scale(new double[] { power/currentPower, 0 });
+        A.scale(new double[] { Math.sqrt(power/currentPower), 0.0 });
         return A;
     }
 

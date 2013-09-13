@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import java.util.Set;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -47,58 +49,48 @@ public class ClusterTest {
     public void txPrecodingMatrixTest() throws NetworkNotReadyException, ClusterNotReadyException,
             ComplexMatrixNotSPDException {
         Cluster cluster = new Cluster(-1750, -1000);
-        cluster.addBaseStation(new BaseStation(-2600, -1400, 4, 20, 2));
-        cluster.addBaseStation(new BaseStation(-1700, -1350, 4, 20, 2));
-        cluster.addBaseStation(new BaseStation(-1740, -1050, 4, 20, 2));
-        cluster.addBaseStation(new BaseStation(-1500, -1200, 4, 20, 2));
-        cluster.addBaseStation(new BaseStation(-1350, -1000, 4, 20, 2));
+        cluster.addBaseStation(new BaseStation(-2600, -1400, 4, 20));
+        cluster.addBaseStation(new BaseStation(-1700, -1350, 4, 20));
+        cluster.addBaseStation(new BaseStation(-1740, -1050, 4, 20));
+        cluster.addBaseStation(new BaseStation(-1500, -1200, 4, 20));
+        cluster.addBaseStation(new BaseStation(-1350, -1000, 4, 20));
         cluster.addUE(new UE(-2250, -500, 2, 2));
         cluster.addUE(new UE(-1500, -650, 2, 2));
         cluster.addUE(new UE(-1250, -1250, 2, 2));
 
-        for (BaseStation bs : cluster.getBSs()) {
-            bs.genRandomTxPreMatrix();
-        }
-        cluster.alloc();
-        cluster.assembleTxPreMatrix();
-        for (UE ue : cluster.getUEs()) {
-            ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
-            int rowOffset = 0;
-            for (BaseStation bs : cluster.getBSs()) {
-                for (ComplexMatrixEntry e : bs.getTxPreMatrix(ue)) {
-                    Assert.assertEquals(e.get()[0], Vik.get(e.row() + rowOffset, e.column())[0], 0);
-                    Assert.assertEquals(e.get()[1], Vik.get(e.row() + rowOffset, e.column())[1], 0);
-                }
-                rowOffset += bs.getNumAntennas();
-            }
-        }
+        // TODO
+    }
 
-        // TODO test
+    @Test
+    public void closureTest() {
+        Network network = new Network(1.1);
+        double sqrt3D2 = Math.sqrt(3) / 2;
+        Cluster cluster1 = new Cluster(0, 0);
+        Cluster cluster2 = new Cluster(0, 1);
+        Cluster cluster3 = new Cluster(0, -1);
+        Cluster cluster4 = new Cluster(sqrt3D2, 0.5);
+        Cluster cluster5 = new Cluster(sqrt3D2, -0.5);
+        Cluster cluster6 = new Cluster(-sqrt3D2, 0.5);
+        Cluster cluster7 = new Cluster(-sqrt3D2, -0.5);
+        network.addCluster(cluster1).addCluster(cluster2).addCluster(cluster3).addCluster(cluster4)
+                .addCluster(cluster5).addCluster(cluster6).addCluster(cluster7);
 
-        Network network = new Network();
-        network.addCluster(cluster);
-        for (BaseStation bs : cluster.getBSs()) {
-            bs.genRandomTxPreMatrix();
-        }
-        cluster.assembleTxPreMatrix();
-        for (UE ue : cluster.getUEs()) {
-            ue.calcRxPreMatrixAndRate();
-        }
+        Set<Cluster> closure1 = cluster1.getClosureCluster();
+        Assert.assertTrue(closure1.contains(cluster1));
+        Assert.assertTrue(closure1.contains(cluster2));
+        Assert.assertTrue(closure1.contains(cluster3));
+        Assert.assertTrue(closure1.contains(cluster4));
+        Assert.assertTrue(closure1.contains(cluster5));
+        Assert.assertTrue(closure1.contains(cluster6));
+        Assert.assertTrue(closure1.contains(cluster7));
 
-        for (BaseStation bs : cluster.getBSs()) {
-            bs.genRandomTxPreMatrix();
-        }
-        cluster.assembleTxPreMatrix();
-        for (UE ue : cluster.getUEs()) {
-            ComplexMatrix Vik = cluster.getTxPreMatrix(ue);
-            int rowOffset = 0;
-            for (BaseStation bs : cluster.getBSs()) {
-                for (ComplexMatrixEntry e : bs.getTxPreMatrix(ue)) {
-                    Assert.assertEquals(e.get()[0], Vik.get(e.row() + rowOffset, e.column())[0], 0);
-                    Assert.assertEquals(e.get()[1], Vik.get(e.row() + rowOffset, e.column())[1], 0);
-                }
-                rowOffset += bs.getNumAntennas();
-            }
-        }
+        Set<Cluster> closure2 = cluster2.getClosureCluster();
+        Assert.assertTrue(!closure2.contains(cluster3));
+        Assert.assertTrue(!closure2.contains(cluster5));
+        Assert.assertTrue(!closure2.contains(cluster7));
+        Assert.assertTrue(closure2.contains(cluster2));
+        Assert.assertTrue(closure2.contains(cluster1));
+        Assert.assertTrue(closure2.contains(cluster4));
+        Assert.assertTrue(closure2.contains(cluster6));
     }
 }

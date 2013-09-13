@@ -71,9 +71,24 @@ public interface ComplexVector extends Iterable<ComplexVectorEntry>, Serializabl
     ComplexVector add(double alpha[], ComplexVector y);
 
     /**
+     * <code>A=x*y<sup>T</sup></code>
+     */
+    ComplexMatrix mult(ComplexVector y, ComplexMatrix A);
+
+    /**
      * <code>x<sup>T</sup>*y</code>
      */
     double[] dot(ComplexVector y);
+
+    /**
+     * <code>x=x<sup>*</sup></code>, conjugate in-place
+     */
+    ComplexVector conjugate();
+
+    /**
+     * <code>y=x<sup>*</sup></code>, conjugate to a new vector
+     */
+    ComplexVector conjugate(ComplexVector y);
 
     /**
      * Computes the given norm of the vector

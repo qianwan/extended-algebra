@@ -14,4 +14,8 @@ public final class Utils {
         dist = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
         return dist;
     }
+
+    public static double log2(double a) {
+        return Math.log(a) / Math.log(2);
+    }
 }

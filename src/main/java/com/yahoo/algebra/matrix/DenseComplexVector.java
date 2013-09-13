@@ -13,7 +13,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
      */
     private final double[] data;
 
-    protected DenseComplexVector(int size) {
+    public DenseComplexVector(int size) {
         super(size);
         data = new double[size * 2];
     }
@@ -123,8 +123,9 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
 
         double[] yd = ((DenseComplexVector) y).getData();
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < yd.length; i++) {
             data[i] += yd[i];
+        }
 
         return this;
     }
@@ -203,5 +204,21 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
      */
     public double[] getData() {
         return data;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < size; i++) {
+            sb.append(String.format("%6.4g", get(i)[0]));
+            double imag = get(i)[1];
+            if (i != size - 1)
+                sb.append(String.format("%+6.4gj;\t", imag));
+            else
+                sb.append(String.format("%+6.4gj", imag));
+        }
+        sb.append("]");
+        return sb.toString().trim();
     }
 }

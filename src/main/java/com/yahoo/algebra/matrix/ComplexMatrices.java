@@ -1,5 +1,10 @@
 package com.yahoo.algebra.matrix;
 
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.EVD;
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.NotConvergedException;
+
 import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
@@ -109,5 +114,34 @@ public final class ComplexMatrices {
             }
         }
         return A;
+    }
+
+    /**
+     * @throws NotConvergedException 
+     * 
+     */
+    public static double spectralRadius(ComplexMatrix A) throws NotConvergedException {
+        if (!A.isSquare()) {
+            throw new ComplexMatrixNotSPDException("eigenvalue decomposition is for squre matrix");
+        }
+        Matrix B = new DenseMatrix(A.numRows()*2, A.numColumns()*2);
+        for (int i = 0; i < A.numRows(); i++) {
+            for (int j = 0; j < A.numColumns(); j++) {
+                B.set(i, j, A.get(i, j)[0]);
+                B.set(i, j+A.numColumns(), -A.get(i, j)[1]);
+                B.set(i+A.numRows(), j, A.get(i, j)[1]);
+                B.set(i+A.numRows(), j+A.numColumns(), A.get(i, j)[0]);
+            }
+        }
+        EVD evd = new EVD(B.numRows());
+        evd.factor((DenseMatrix) B);
+        double rho = 0.0;
+        double [] Wr = evd.getRealEigenvalues();
+        double [] Wi = evd.getImaginaryEigenvalues();
+        for (int i = 0; i < Wr.length; i++) {
+            double tmp = Math.sqrt(Wr[i]*Wr[i] + Wi[i]*Wi[i]);
+            if (rho < tmp) rho = tmp;
+        }
+        return rho;
     }
 }
