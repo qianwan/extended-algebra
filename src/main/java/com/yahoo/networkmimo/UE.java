@@ -254,6 +254,7 @@ public class UE extends Entity {
                 }
             }
         } while (flag);
+        logger.debug("Optimize tx vector to " + this + " done!");
     }
 
     /**
@@ -275,10 +276,13 @@ public class UE extends Entity {
         } else {
             ComplexMatrix M = network.getMMatrix(q, q);
             theta = 1 / Math.sqrt(q.getPowerAllocation(this));
-            double targetValue = 0.0;
-            if (bisectionTarget(0, theta, M, c) >= 1.0) {
+            double targetValue = bisectionTarget(0, theta, M, c);
+            if (targetValue > 1.0) {
                 double mLow = 0.0;
                 double mHigh = getUpperBoundOfLagrangianMultiplier(q);
+                while (bisectionTarget(mHigh, theta, M, c) >= 1.0) {
+                    mHigh *= 2;
+                }
                 do {
                     multiplier = (mLow + mHigh) / 2;
                     targetValue = bisectionTarget(multiplier, theta, M, c);
@@ -286,18 +290,26 @@ public class UE extends Entity {
                         mLow = multiplier;
                     else
                         mHigh = multiplier;
-                } while (Math.abs(targetValue - 1) > 1e-6);
-            } else {
+                } while (Math.abs(targetValue - 1) > 1e-3);
+            } else if (targetValue < 1.0) {
                 double tLow = theta;
                 double tHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q);
-                do {
-                    theta = (tLow + tHigh) / 2;
-                    targetValue = bisectionTarget(multiplier, theta, M, c);
-                    if (targetValue > 1)
-                        tHigh = theta;
-                    else
-                        tLow = theta;
-                } while (Math.abs(targetValue - 1) > 1e-6);
+                multiplier = 0.0;
+                while (bisectionTarget(multiplier, tHigh, M, c) < 1.0) {
+                    tHigh *= 2.0;
+                }
+                if (Double.isInfinite(tHigh)) {
+                    theta = tHigh;
+                } else {
+                    do {
+                        theta = (tLow + tHigh) / 2;
+                        targetValue = bisectionTarget(multiplier, theta, M, c);
+                        if (targetValue > 1)
+                            tHigh = theta;
+                        else
+                            tLow = theta;
+                    } while (Math.abs(targetValue - 1) > 1e-3);
+                }
             }
             ComplexVector v = null;
             if (Double.isInfinite(theta)) {
@@ -307,7 +319,6 @@ public class UE extends Entity {
                 v = ComplexMatrices.eye(q.getNumAntennas())
                         .scale(new double[] { lambda * theta / 2 + multiplier, 0 }).add(M)
                         .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
-
             logger.debug("Use block coordinate descent, get multipler: " + multiplier + "; theta: "
                     + theta + "; tx vector: " + v);
             q.setTxPreVector(this, v);
