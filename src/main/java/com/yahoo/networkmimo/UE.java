@@ -3,10 +3,10 @@ package com.yahoo.networkmimo;
 import java.util.Map;
 import java.util.Set;
 
+import no.uib.cipr.matrix.NotConvergedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import no.uib.cipr.matrix.NotConvergedException;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -47,6 +47,8 @@ public class UE extends Entity {
 
     public static final double N0 = 1;
 
+    private String name = null;
+
     /**
      * 
      * @param x
@@ -61,6 +63,12 @@ public class UE extends Entity {
     public UE(double x, double y, int numAntennas, double lambda) {
         super(x, y, Entity.Type.UE, numAntennas);
         this.lambda = lambda;
+    }
+
+    public UE(double x, double y, int numAntennas, double lambda, String name) {
+        super(x, y, Entity.Type.UE, numAntennas);
+        this.lambda = lambda;
+        this.name = name;
     }
 
     /**
@@ -98,7 +106,7 @@ public class UE extends Entity {
     }
 
     public void updateCVectorMap() {
-        for (Cluster l : cluster.getClosureCluster()) {
+        for (Cluster l : cluster.getClusterClosure()) {
             for (BaseStation q : l.getBSs()) {
                 updateCVector(q);
             }
@@ -112,7 +120,7 @@ public class UE extends Entity {
      * @return The irrelevant part of partial derivative over Base Station
      *         <code>q</code>, <code>c<sub>ik</sub><sup>ql</sup></code>
      */
-    private void updateCVector(BaseStation q) {
+    private ComplexVector updateCVector(BaseStation q) {
         Cluster l = q.getCluster();
         ComplexVector cVector = new DenseComplexVector(q.getNumAntennas());
         cVector.zero();
@@ -132,7 +140,7 @@ public class UE extends Entity {
                 .mult(rxPreVector, new DenseComplexVector(localH.numColumns()))
                 .scale(new double[] { -mmseWeight, 0 }));
         cVector.scale(new double[] { 2, 0 });
-        for (Cluster m : cluster.getClosureCluster()) {
+        for (Cluster m : cluster.getClusterClosure()) {
             if (m == l) {
                 continue;
             } else {
@@ -149,6 +157,7 @@ public class UE extends Entity {
         }
         cVector.scale(new double[] { -0.5, 0 });
         cVectorMap.put(q, cVector);
+        return cVector;
     }
 
     private double getUpperBoundOfLagrangianMultiplier(BaseStation q) {
@@ -188,7 +197,7 @@ public class UE extends Entity {
      *            c vector
      * @return optimal Lagrangian multiplier
      */
-    private double bisectionTarget(double mu, double theta, ComplexMatrix M, ComplexVector c) {
+    public double bisectionTarget(double mu, double theta, ComplexMatrix M, ComplexVector c) {
         return theta
                 * ComplexMatrices.eye(M.numRows())
                         .scale(new double[] { lambda * theta / 2.0 + mu, 0 }).add(M).inverse()
@@ -196,48 +205,142 @@ public class UE extends Entity {
     }
 
     /**
+     * Use the block coordinate descent method to optimize the subproblem
+     */
+    public void optimize() {
+        Set<Cluster> clusters = cluster.getClusterClosure();
+        boolean flag = true;
+        final int maxCount = 25;
+        int count = 0;
+        logger.debug("Optimize tx vector to " + this);
+        do {
+            if (count++ > maxCount)
+                break;
+            for (Cluster l : clusters) {
+                for (BaseStation q : l.getBSs()) {
+                    q.setSubgradient(this, -blockCoordinateDescent(q));
+
+                }
+            }
+            updateCVectorMap();
+            flag = false;
+            for (Cluster l : clusters) {
+                for (BaseStation q : l.getBSs()) {
+                    ComplexVector c = getCVector(q);
+                    ComplexMatrix M = network.getMMatrix(q, q);
+                    if (c.norm(Norm.Two) <= lambda / 2
+                            && q.getTxPreVector(this).norm(Norm.Two) > 0.05) {
+                        flag = true;
+                        break;
+                    } else {
+                        ComplexVector left = new DenseComplexVector(q.getNumAntennas());
+                        left.set(q.getTxPreVector(this));
+                        left.scale(new double[] { -q.getSubgradient(this), 0 });
+                        left.add(M.mult(q.getTxPreVector(this),
+                                new DenseComplexVector(q.getNumAntennas())));
+                        left.add(new double[] { -1, 0 }, c);
+                        left.scale(new double[] { -2, 0 });
+
+                        ComplexVector right = new DenseComplexVector(q.getNumAntennas());
+                        right.set(q.getTxPreVector(this));
+                        right.scale(new double[] { lambda / q.getTxPreVector(this).norm(Norm.Two),
+                                0.0 });
+                        left.add(new double[] { -1, 0 }, right);
+                        if (left.norm(Norm.Two) > 0.05) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        } while (flag);
+    }
+
+    /**
+     * The block variable is <code>v<sub>ik</sub><sup>ql</sup></code>
      * 
      * @param q
-     *            The base station to optimize the tx precoding vector
-     * @return Optimal Lagrangian multiplier
+     *            Base station
+     * @return Lagrangian multiplier
      */
-    public double optimize(BaseStation q) {
+    public double blockCoordinateDescent(BaseStation q) {
+        ComplexVector c = updateCVector(q);
+        logger.debug("Optimize tx vector from " + q + " to " + this);
         double multiplier = 0.0;
         double theta = 0.0;
-        ComplexVector c = getCVector(q);
-        if (c.norm(Norm.Two) < lambda) {
+        if (c.norm(Norm.Two) <= lambda / 2) {
             q.getTxPreVector(this).zero();
             multiplier = 0.0;
+            logger.debug("Sparsity is ensured between " + q + " and " + this);
         } else {
-            double mLow = 0.0;
-            double mHigh = getUpperBoundOfLagrangianMultiplier(q);
-            double tLow = 0.0;
-            double tHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q);
-            do {
-                multiplier = (mLow + mHigh) / 2;
+            ComplexMatrix M = network.getMMatrix(q, q);
+            theta = 1 / Math.sqrt(q.getPowerAllocation(this));
+            double targetValue = 0.0;
+            if (bisectionTarget(0, theta, M, c) >= 1.0) {
+                double mLow = 0.0;
+                double mHigh = getUpperBoundOfLagrangianMultiplier(q);
+                do {
+                    multiplier = (mLow + mHigh) / 2;
+                    targetValue = bisectionTarget(multiplier, theta, M, c);
+                    if (targetValue > 1)
+                        mLow = multiplier;
+                    else
+                        mHigh = multiplier;
+                } while (Math.abs(targetValue - 1) > 1e-6);
+            } else {
+                double tLow = theta;
+                double tHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q);
                 do {
                     theta = (tLow + tHigh) / 2;
-                    double target = bisectionTarget(multiplier, theta, network.getMMatrix(q, q),
-                            getCVector(q));
-                    if (target < 1)
-                        tLow = theta;
-                    else
+                    targetValue = bisectionTarget(multiplier, theta, M, c);
+                    if (targetValue > 1)
                         tHigh = theta;
-                } while (Math.abs(tHigh - tLow) < 1e-2);
-                if (1 / theta / theta < q.getPowerAllocation(this))
-                    mHigh = multiplier;
-                else
-                    mLow = multiplier;
-            } while (Math.abs(mHigh - mLow) < 1e-2);
-            ComplexVector v = ComplexMatrices.eye(q.getNumAntennas())
-                    .scale(new double[] { lambda * theta / 2 + multiplier, 0 })
-                    .add(network.getMMatrix(q, q)).inverse()
-                    .mult(getCVector(q), new DenseComplexVector(q.getNumAntennas()));
+                    else
+                        tLow = theta;
+                } while (Math.abs(targetValue - 1) > 1e-6);
+            }
+            ComplexVector v = null;
+            if (Double.isInfinite(theta)) {
+                v = new DenseComplexVector(q.getNumAntennas());
+                v.zero();
+            } else
+                v = ComplexMatrices.eye(q.getNumAntennas())
+                        .scale(new double[] { lambda * theta / 2 + multiplier, 0 }).add(M)
+                        .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+
+            logger.debug("Use block coordinate descent, get multipler: " + multiplier + "; theta: "
+                    + theta + "; tx vector: " + v);
             q.setTxPreVector(this, v);
         }
-
         return multiplier;
     }
+
+    // private double objectiveValue() {
+    // double ret = 0.0;
+    // for (Cluster l : cluster.getClusterClosure()) {
+    // for (Cluster m : cluster.getClusterClosure()) {
+    // for (BaseStation q : l.getBSs()) {
+    // for (BaseStation p : m.getBSs()) {
+    // double dot = q.getTxPreVector(this).dot(
+    // network.getMMatrix(q, p).mult(p.getTxPreVector(this),
+    // new DenseComplexVector(q.getNumAntennas())))[0];
+    // ret += dot;
+    // }
+    // }
+    // }
+    // }
+    // ComplexVector tmp = new DenseComplexVector(getNumAntennas());
+    // tmp.zero();
+    // for (Cluster l : cluster.getClusterClosure()) {
+    // for (BaseStation q : l.getBSs()) {
+    // tmp.add(q.getMIMOChannel(this).mult(q.getTxPreVector(this),
+    // new DenseComplexVector(getNumAntennas())));
+    // ret += lambda * q.getTxPreVector(this).norm(Norm.Two);
+    // }
+    // }
+    // ret -= 2 * mmseWeight * rxPreVector.dot(tmp)[0];
+    // return ret;
+    // }
 
     /**
      * Calculate rx precoding matrix for
@@ -254,8 +357,8 @@ public class UE extends Entity {
 
         for (Cluster l : network.getClusters()) {
             for (Cluster lPrim : network.getClusters()) {
-                Set<Cluster> commonClusters = Sets.intersection(l.getClosureCluster(),
-                        lPrim.getClosureCluster());
+                Set<Cluster> commonClusters = Sets.intersection(l.getClusterClosure(),
+                        lPrim.getClusterClosure());
                 for (Cluster m : commonClusters) {
                     for (UE j : m.getUEs()) {
                         ComplexMatrix HvvH = null;
@@ -290,13 +393,17 @@ public class UE extends Entity {
             }
         }
         C.add(new double[] { N0, 0 }, ComplexMatrices.eye(C.numRows()));
-        logger.info("C matrix:\n" + C);
-        logger.info("Local HvvH\n" + localHvvH);
-        logger.info("Local Hv\n" + localHv);
+        logger.debug("C matrix: " + C);
+        logger.debug("Local HvvH: " + localHvvH);
+        logger.debug("Local Hv: " + localHv);
         // L = C - localHvvH
         L.set(C).add(new double[] { -1, 0 }, localHvvH);
+        logger.debug("L matrix: " + L);
 
         ComplexMatrix Cinv = C.inverse();
+        logger.debug("Cinv: " + Cinv);
+        logger.debug("C * Cinv: " + C.mult(Cinv));
+
         rxPreVector = Cinv.mult(localHv, new DenseComplexVector(Cinv.numRows()));
         mmseWeight = 1.0 / (1 - localHv.dot(rxPreVector)[0]);
         rate = Utils.log2(ComplexMatrices
@@ -304,8 +411,8 @@ public class UE extends Entity {
                 .add(localHv.mult(localHv.conjugate(new DenseComplexVector(localHv.size())),
                         new DenseComplexMatrix(localHv.size(), localHv.size())).mult(L.inverse()))
                 .det2()) / 2.0;
-        logger.info("Update " + this + ": MMSE weight: " + mmseWeight + "; Shannon rate: " + rate
-                + "; rx precoding vector\n" + rxPreVector);
+        logger.debug("Update " + this + ": MMSE weight: " + mmseWeight + "; Shannon rate: " + rate
+                + "; rx precoding vector: " + rxPreVector);
     }
 
     public Network getNetwork() {
@@ -336,6 +443,10 @@ public class UE extends Entity {
 
     @Override
     public String toString() {
-        return String.format("UE@(%.4f,%.4f)", getXY()[0], getXY()[1]);
+        return String.format("UE#%s@(%.4f,%.4f)", name, getXY()[0], getXY()[1]);
+    }
+
+    public double getLambda() {
+        return lambda;
     }
 }

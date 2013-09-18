@@ -116,13 +116,12 @@ public abstract class AbstractComplexVector implements ComplexVector, Serializab
     }
 
     public ComplexMatrix mult(ComplexVector y, ComplexMatrix A) {
-        if (size != y.size() || A.numRows() != size || A.numColumns() != size) {
-            throw new IndexOutOfBoundsException("size != y.size (" + size + " != " + y.size()
-                    + " ) || " + "A.row != size (" + A.numRows() + " != " + size + ") || "
-                    + "A.column != size (" + A.numColumns() + " != " + size() + ")");
+        if (A.numRows() != size || A.numColumns() != y.size()) {
+            throw new IndexOutOfBoundsException("A.row != size (" + A.numRows() + " != " + size
+                    + ") || " + "A.column != y.size (" + A.numColumns() + " != " + y.size() + ")");
         }
         for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+            for (int j = 0; j < y.size(); j++) {
                 A.set(i, j, Complexes.mult(get(i), y.get(j)));
             }
         }

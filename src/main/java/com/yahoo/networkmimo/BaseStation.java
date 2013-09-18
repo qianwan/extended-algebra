@@ -1,20 +1,11 @@
 package com.yahoo.networkmimo;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.math.optimization.GoalType;
-import org.apache.commons.math.optimization.OptimizationException;
-import org.apache.commons.math.optimization.RealPointValuePair;
-import org.apache.commons.math.optimization.linear.LinearConstraint;
-import org.apache.commons.math.optimization.linear.LinearObjectiveFunction;
-import org.apache.commons.math.optimization.linear.Relationship;
-import org.apache.commons.math.optimization.linear.SimplexSolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yahoo.algebra.matrix.ComplexVector;
@@ -35,6 +26,10 @@ public class BaseStation extends Entity {
     private Map<UE, Double> powerAllocation = Maps.newHashMap();
 
     private Map<UE, Double> subgradient = Maps.newHashMap();
+
+    private String name = null;
+
+    public static int iteration;
 
     public BaseStation(double x, double y, int numAntennas) {
         super(x, y, Entity.Type.BS, numAntennas);
@@ -58,6 +53,12 @@ public class BaseStation extends Entity {
         setPowerBudget(powerBudget);
     }
 
+    public BaseStation(double x, double y, int numAntennas, double powerBudget, String name) {
+        super(x, y, Entity.Type.BS, numAntennas);
+        setPowerBudget(powerBudget);
+        this.name = name;
+    }
+
     public void setTxPreVector(UE ue, ComplexVector v) {
         txPreVector.put(ue, v);
     }
@@ -73,7 +74,7 @@ public class BaseStation extends Entity {
 
     public int getNumberOfUEsToBeServed() {
         int num = 0;
-        for (Cluster l : cluster.getClosureCluster()) {
+        for (Cluster l : cluster.getClusterClosure()) {
             for (UE ue : l.getUEs()) {
                 if (ue.isToBeServedBy(this))
                     num++;
@@ -84,7 +85,7 @@ public class BaseStation extends Entity {
 
     public Set<UE> getUEsToBeServed() {
         Set<UE> servedUEs = Sets.newHashSet();
-        for (Cluster l : cluster.getClosureCluster()) {
+        for (Cluster l : cluster.getClusterClosure()) {
             for (UE ue : l.getUEs()) {
                 if (ue.isToBeServedBy(this))
                     servedUEs.add(ue);
@@ -113,6 +114,10 @@ public class BaseStation extends Entity {
 
     public void setSubgradient(UE ue, double v) {
         subgradient.put(ue, v);
+    }
+
+    public Map<UE, Double> getSubgradients() {
+        return subgradient;
     }
 
     /**
@@ -150,7 +155,7 @@ public class BaseStation extends Entity {
             ComplexVector v = ComplexVectors.random(new DenseComplexVector(getNumAntennas()));
             txPreVector.put(alloc.getKey(), ComplexVectors.setPower(v, alloc.getValue()));
             logger.debug("Generate random tx precoding vector from " + this + " to "
-                    + alloc.getKey() + "\n" + v);
+                    + alloc.getKey() + ": " + v);
         }
     }
 
@@ -164,7 +169,7 @@ public class BaseStation extends Entity {
 
     @Override
     public String toString() {
-        return String.format("BaseStation@(%.4f,%.4f)", getXY()[0], getXY()[1]);
+        return String.format("BaseStation#%s@(%.4f,%.4f)", name, getXY()[0], getXY()[1]);
     }
 
     @Override
@@ -172,36 +177,67 @@ public class BaseStation extends Entity {
         return toString().hashCode();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        else
+            return false;
+    }
+
     /**
      * Optimize the power allocation
      */
     public void optimizePowerAllocation() {
-        UE[] ueList = (UE[]) subgradient.keySet().toArray();
-        double[] coefs = new double[ueList.length];
-        double constantTerm = 0.0;
-        for (int i = 0; i < ueList.length; i++) {
-            coefs[i] = subgradient.get(ueList[i]);
-            constantTerm = constantTerm - coefs[i] * powerAllocation.get(ueList[i]);
+        UE[] ueList = new UE[subgradient.size()];
+        int index = 0;
+        for (UE ue : subgradient.keySet()) {
+            ueList[index++] = ue;
         }
+        double[] direction = new double[ueList.length];
+        for (int i = 0; i < direction.length; i++) {
+            direction[i] = powerAllocation.get(ueList[i]) - subgradient.get(ueList[i]);
+        }
+        double relaxL = -100;
+        double relaxH = 100;
+        double totalPower = 0.0;
+        double[] projection = new double[ueList.length];
+        do {
+            double relax = (relaxL + relaxH) / 2;
+            totalPower = 0.0;
+            for (int i = 0; i < projection.length; i++) {
+                projection[i] = (direction[i] <= relax) ? 0 : direction[i] - relax;
+                totalPower += projection[i];
+            }
+            if (totalPower > powerBudget)
+                relaxL = relax;
+            else
+                relaxH = relax;
+        } while (Math.abs(totalPower - powerBudget) > 1e-2);
 
-        LinearObjectiveFunction f = new LinearObjectiveFunction(coefs, constantTerm);
-        double[] powerSumCoefs = new double[ueList.length];
-        for (int i = 0; i < powerSumCoefs.length; i++)
-            powerSumCoefs[i] = 1.0;
-        List<LinearConstraint> constraints = Lists.newArrayList();
-        constraints.add(new LinearConstraint(powerSumCoefs, Relationship.LEQ, powerBudget));
-        SimplexSolver simplex = new SimplexSolver();
-        try {
-            RealPointValuePair pair = simplex.optimize(f, constraints, GoalType.MINIMIZE, true);
-            if (pair.getValue() > 0) {
-                logger.error("Not a feasible direction");
-            }
-            double[] newAllocation = pair.getPointRef();
-            for (int i = 0; i < ueList.length; i++) {
-                powerAllocation.put(ueList[i], newAllocation[i]);
-            }
-        } catch (OptimizationException e) {
-            logger.error("Power allocation failed at " + this);
+        for (int i = 0; i < ueList.length; i++) {
+            double orig = powerAllocation.get(ueList[i]);
+            powerAllocation.put(ueList[i], orig + 1 * (projection[i] - orig));
         }
+    }
+
+    public Map<UE, Double> getPowerAllocations() {
+        return this.powerAllocation;
+    }
+
+    public double getRealPowerAllocation(UE ue) {
+        return ComplexVectors.getPower(txPreVector.get(ue));
+    }
+
+    public Map<UE, Double> getRealPowerAllocations() {
+        Map<UE, Double> realPowerAllocations = Maps.newHashMap();
+        for (Map.Entry<UE, ComplexVector> entry : txPreVector.entrySet()) {
+            realPowerAllocations.put(entry.getKey(), ComplexVectors.getPower(entry.getValue()));
+        }
+        return realPowerAllocations;
+    }
+
+    public double getSubgradient(UE ue) {
+        return subgradient.get(ue);
     }
 }

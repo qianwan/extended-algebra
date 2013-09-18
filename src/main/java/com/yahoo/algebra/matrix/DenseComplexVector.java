@@ -89,7 +89,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         checkSize(y);
 
         double[] yd = ((DenseComplexVector) y).getData();
-        System.arraycopy(yd, 0, data, 0, size);
+        System.arraycopy(yd, 0, data, 0, data.length);
 
         return this;
     }
@@ -107,8 +107,8 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         double[] yd = ((DenseComplexVector) y).getData();
 
         for (int i = 0; i < size; ++i) {
-            data[i] = alpha[i] * yd[i] - alpha[i + size] * yd[i + size];
-            data[i + size] = alpha[i] * yd[i + size] + alpha[i + size] * yd[i];
+            data[i] = alpha[0] * yd[i] - alpha[1] * yd[i + size];
+            data[i + size] = alpha[1] * yd[i] + alpha[0] * yd[i + size];
         }
 
         return this;
@@ -143,8 +143,8 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         double[] yd = ((DenseComplexVector) y).getData();
 
         for (int i = 0; i < size; i++) {
-            double re = alpha[i] * yd[i] - alpha[i + size] * yd[i + size];
-            double im = alpha[i] * yd[i + size] + alpha[i + size] * yd[i];
+            double re = alpha[0] * yd[i] - alpha[1] * yd[i + size];
+            double im = alpha[0] * yd[i + size] + alpha[1] * yd[i];
             data[i] += re;
             data[i + size] += im;
         }
@@ -211,12 +211,12 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (int i = 0; i < size; i++) {
-            sb.append(String.format("%6.4g", get(i)[0]));
+            sb.append(String.format("%e", get(i)[0]));
             double imag = get(i)[1];
             if (i != size - 1)
-                sb.append(String.format("%+6.4gj;\t", imag));
+                sb.append(String.format("%+ej;", imag));
             else
-                sb.append(String.format("%+6.4gj", imag));
+                sb.append(String.format("%+ej", imag));
         }
         sb.append("]");
         return sb.toString().trim();

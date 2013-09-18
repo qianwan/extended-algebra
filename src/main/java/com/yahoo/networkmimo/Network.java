@@ -11,6 +11,7 @@ import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexVector;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexVector;
+import com.yahoo.algebra.matrix.ComplexVector.Norm;
 
 public class Network {
     private final static Logger logger = LoggerFactory.getLogger(Network.class);
@@ -40,7 +41,7 @@ public class Network {
             ue.setNetwork(this);
             ues.add(ue);
         }
-        logger.info("Add " + cluster + " to " + this);
+        logger.debug("Add " + cluster + " to " + this);
         return this;
     }
 
@@ -101,23 +102,21 @@ public class Network {
     public void updateMMatrixMap() {
         for (BaseStation q : bss) {
             for (BaseStation p : bss) {
-                Cluster l = q.getCluster();
-                Cluster lPrim = p.getCluster();
                 ComplexMatrix Mqp = new DenseComplexMatrix(q.getNumAntennas(), p.getNumAntennas());
                 Mqp.zero();
                 for (UE ue : getUEs()) {
-                    double wjm = ue.getMMSEWeight();
-                    ComplexMatrix Hjml = l.getMIMOChannel(ue);
+                    double w = ue.getMMSEWeight();
+                    ComplexMatrix Hjmq = q.getMIMOChannel(ue);
                     ComplexVector ujm = ue.getRxPreVector();
-                    ComplexMatrix Hjml_ = lPrim.getMIMOChannel(ue);
-                    ComplexMatrix HuuH = Hjml
+                    ComplexMatrix Hjmp_ = p.getMIMOChannel(ue);
+                    ComplexMatrix HuuH = Hjmq
                             .hermitianTranspose(
-                                    new DenseComplexMatrix(Hjml.numColumns(), Hjml.numRows()))
-                            .mult(ujm, new DenseComplexVector(Hjml.numColumns()))
+                                    new DenseComplexMatrix(Hjmq.numColumns(), Hjmq.numRows()))
+                            .mult(ujm, new DenseComplexVector(Hjmq.numColumns()))
                             .mult(ujm.conjugate(new DenseComplexVector(ujm.size())),
-                                    new DenseComplexMatrix(Hjml.numColumns(), ujm.size()))
-                            .mult(Hjml_);
-                    Mqp.add(HuuH.scale(new double[] { wjm, 0 }));
+                                    new DenseComplexMatrix(Hjmq.numColumns(), ujm.size()))
+                            .mult(Hjmp_);
+                    Mqp.add(HuuH.scale(new double[] { w, 0 }));
                 }
                 MMatrixMap.put(q, p, Mqp);
             }
@@ -135,21 +134,20 @@ public class Network {
     public void iterate() {
         updateMMatrixMap();
         for (UE ue : ues) {
-            ue.updateCVectorMap();
-        }
-        for (UE ue : ues) {
-            for (Cluster l : ue.getCluster().getClosureCluster()) {
-                for (BaseStation q : l.getBSs()) {
-                    q.setSubgradient(ue, -ue.optimize(q));
-                }
-            }
+            ue.optimize();
         }
         for (UE ue : ues) {
             ue.updateVariables();
         }
         for (BaseStation q : bss) {
+            logger.debug("Optimization in " + q);
             q.optimizePowerAllocation();
+            logger.debug("Multipliers of " + q + ": " + q.getSubgradients());
+            logger.debug("Real power allocation of " + q + ": " + q.getRealPowerAllocations());
+            logger.debug("New power allocation of " + q + ": " + q.getPowerAllocations());
         }
+        BaseStation.iteration++;
+        logger.debug("Sum rate is " + getSumRate());
     }
 
     private void generateFeasibleInitialVariables() {
@@ -161,7 +159,8 @@ public class Network {
             for (UE i : l.getUEs()) {
                 q.setPowerAllocation(i, powerBudget / numUEs);
             }
-            logger.debug("Initial average power allocation from " + q + ": " + powerBudget / numUEs);
+            logger.debug("Initial average power allocation within the located cluster from " + q
+                    + ": " + powerBudget / numUEs);
             q.generateRandomTxPreVector();
         }
     }
@@ -177,6 +176,43 @@ public class Network {
         for (UE ue : ues) {
             ue.updateVariables();
         }
+        logger.debug("Sum rate is " + getSumRate());
+    }
+
+    public double getSumRate() {
+        double sumRate = 0.0;
+        for (UE ue : ues) {
+            sumRate += ue.getRate();
+        }
+        return sumRate;
+    }
+
+    public double objectiveValue() {
+        double ret = getSumRate();
+        for (UE ue : ues) {
+            for (Cluster l : ue.getCluster().getClusterClosure()) {
+                for (BaseStation q : l.getBSs()) {
+                    ret -= ue.getLambda() * q.getTxPreVector(ue).norm(Norm.Two);
+                }
+            }
+        }
+        return ret;
+    }
+
+    public void optimize() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValue();
+        final int maxCount = 20;
+        int count = 0;
+        do {
+            if (count++ > maxCount)
+                break;
+            prev = objectiveValue();
+            iterate();
+            objectiveValue = objectiveValue();
+            logger.debug("Objective value is " + objectiveValue);
+        } while (Math.abs(prev - objectiveValue) > 1e-1);
+        logger.info("Optimized sum rate is " + getSumRate());
     }
 
     @Override

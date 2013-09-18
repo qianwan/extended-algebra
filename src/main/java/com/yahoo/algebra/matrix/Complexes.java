@@ -25,4 +25,10 @@ public final class Complexes {
     public static double abs2(double[] a) {
         return a[0] * a[0] + a[1] * a[1];
     }
+
+    public static boolean equals(double[] a, double[] b, double delta) {
+        double [] c = new double[]{a[0]-b[0], a[1]-b[1]};
+        double absc = abs(c);
+        return absc < delta;
+    }
 }

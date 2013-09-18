@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.networkmimo.exception.ClusterNotReadyException;
 
 public class Cluster extends Entity {
@@ -37,7 +38,7 @@ public class Cluster extends Entity {
             network.addBaseStation(bs);
         }
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
-        logger.info("Add " + bs + " to " + this + " in " + network);
+        logger.debug("Add " + bs + " to " + this + " in " + network);
         return this;
     }
 
@@ -48,11 +49,11 @@ public class Cluster extends Entity {
         if (network!=null) {
             network.addUE(ue);
         }
-        logger.info("Add " + ue + " to " + this + " in " + network);
+        logger.debug("Add " + ue + " to " + this + " in " + network);
         return this;
     }
 
-    public Set<Cluster> getClosureCluster() {
+    public Set<Cluster> getClusterClosure() {
         if (!closure.isEmpty()) return closure;
 
         if (network == null) {
@@ -103,5 +104,11 @@ public class Cluster extends Entity {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         return false;
+    }
+
+    @Override
+    public ComplexMatrix getMIMOChannel(Entity e) {
+        logger.error("");
+        throw new ClusterNotReadyException("Do not need to use channel from clusters to other entities");
     }
 }
