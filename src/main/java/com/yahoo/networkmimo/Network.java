@@ -202,11 +202,7 @@ public class Network {
     public void optimize() {
         double prev = 0.0;
         double objectiveValue = objectiveValue();
-        final int maxCount = 20;
-        int count = 0;
         do {
-            if (count++ > maxCount)
-                break;
             prev = objectiveValue();
             iterate();
             objectiveValue = objectiveValue();

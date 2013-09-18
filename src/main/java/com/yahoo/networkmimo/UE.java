@@ -229,7 +229,7 @@ public class UE extends Entity {
                     ComplexVector c = getCVector(q);
                     ComplexMatrix M = network.getMMatrix(q, q);
                     if (c.norm(Norm.Two) <= lambda / 2
-                            && q.getTxPreVector(this).norm(Norm.Two) > 0.05) {
+                            && q.getTxPreVector(this).norm(Norm.Two) > 0.01) {
                         flag = true;
                         break;
                     } else {
@@ -246,7 +246,7 @@ public class UE extends Entity {
                         right.scale(new double[] { lambda / q.getTxPreVector(this).norm(Norm.Two),
                                 0.0 });
                         left.add(new double[] { -1, 0 }, right);
-                        if (left.norm(Norm.Two) > 0.05) {
+                        if (left.norm(Norm.Two) > 0.01) {
                             flag = true;
                             break;
                         }
@@ -290,7 +290,7 @@ public class UE extends Entity {
                         mLow = multiplier;
                     else
                         mHigh = multiplier;
-                } while (Math.abs(targetValue - 1) > 1e-3);
+                } while (Math.abs(targetValue - 1) > 1e-6);
             } else if (targetValue < 1.0) {
                 double tLow = theta;
                 double tHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q);
@@ -308,7 +308,7 @@ public class UE extends Entity {
                             tHigh = theta;
                         else
                             tLow = theta;
-                    } while (Math.abs(targetValue - 1) > 1e-3);
+                    } while (Math.abs(targetValue - 1) > 1e-6);
                 }
             }
             ComplexVector v = null;

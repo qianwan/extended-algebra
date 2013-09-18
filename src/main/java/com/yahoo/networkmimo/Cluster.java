@@ -34,7 +34,7 @@ public class Cluster extends Entity {
         bss.add(bs);
         bs.setCluster(this);
         bs.setNetwork(network);
-        if (network!=null) {
+        if (network != null) {
             network.addBaseStation(bs);
         }
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
@@ -46,7 +46,7 @@ public class Cluster extends Entity {
         ues.add(ue);
         ue.setCluster(this);
         ue.setNetwork(network);
-        if (network!=null) {
+        if (network != null) {
             network.addUE(ue);
         }
         logger.debug("Add " + ue + " to " + this + " in " + network);
@@ -54,10 +54,12 @@ public class Cluster extends Entity {
     }
 
     public Set<Cluster> getClusterClosure() {
-        if (!closure.isEmpty()) return closure;
+        if (!closure.isEmpty())
+            return closure;
 
         if (network == null) {
-            throw new ClusterNotReadyException("this cluster is not add to any network, so cannot get closure");
+            throw new ClusterNotReadyException(
+                    "this cluster is not add to any network, so cannot get closure");
         }
 
         double closureDistance = network.getClosureDistance();
@@ -102,13 +104,15 @@ public class Cluster extends Entity {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
+        if (obj == this)
+            return true;
         return false;
     }
 
     @Override
     public ComplexMatrix getMIMOChannel(Entity e) {
         logger.error("");
-        throw new ClusterNotReadyException("Do not need to use channel from clusters to other entities");
+        throw new ClusterNotReadyException(
+                "Do not need to use channel from clusters to other entities");
     }
 }

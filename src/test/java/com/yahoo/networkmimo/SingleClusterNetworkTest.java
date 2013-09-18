@@ -16,10 +16,10 @@ public class SingleClusterNetworkTest {
         network.addUE(new UE(-2250, -500, 2, lambda, "1"));
         network.addUE(new UE(-1500, -650, 2, lambda, "2"));
         network.addUE(new UE(-1250, -1250, 2, lambda, "3"));
-        for (int i = 0; i < 100; i++) {
-            System.out.println("Case #%d: " + (i + 1));
+        for (int i = 0; i < 1000; i++) {
             network.refresh();
             network.optimize();
+            System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
         }
     }
 }

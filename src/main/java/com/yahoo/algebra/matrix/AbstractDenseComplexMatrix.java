@@ -70,7 +70,7 @@ public abstract class AbstractDenseComplexMatrix extends AbstractComplexMatrix {
             for (int j = 0; j < numColumns(); j++) {
                 sb.append(String.format("%e", get(i, j)[0]));
                 double imag = get(i, j)[1];
-                if (j != numColumns()-1)
+                if (j != numColumns() - 1)
                     sb.append(String.format("%+ej,", imag));
                 else
                     sb.append(String.format("%+ej", imag));

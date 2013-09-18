@@ -117,30 +117,31 @@ public final class ComplexMatrices {
     }
 
     /**
-     * @throws NotConvergedException 
+     * @throws NotConvergedException
      * 
      */
     public static double spectralRadius(ComplexMatrix A) throws NotConvergedException {
         if (!A.isSquare()) {
             throw new ComplexMatrixNotSPDException("eigenvalue decomposition is for squre matrix");
         }
-        Matrix B = new DenseMatrix(A.numRows()*2, A.numColumns()*2);
+        Matrix B = new DenseMatrix(A.numRows() * 2, A.numColumns() * 2);
         for (int i = 0; i < A.numRows(); i++) {
             for (int j = 0; j < A.numColumns(); j++) {
                 B.set(i, j, A.get(i, j)[0]);
-                B.set(i, j+A.numColumns(), -A.get(i, j)[1]);
-                B.set(i+A.numRows(), j, A.get(i, j)[1]);
-                B.set(i+A.numRows(), j+A.numColumns(), A.get(i, j)[0]);
+                B.set(i, j + A.numColumns(), -A.get(i, j)[1]);
+                B.set(i + A.numRows(), j, A.get(i, j)[1]);
+                B.set(i + A.numRows(), j + A.numColumns(), A.get(i, j)[0]);
             }
         }
         EVD evd = new EVD(B.numRows());
         evd.factor((DenseMatrix) B);
         double rho = 0.0;
-        double [] Wr = evd.getRealEigenvalues();
-        double [] Wi = evd.getImaginaryEigenvalues();
+        double[] Wr = evd.getRealEigenvalues();
+        double[] Wi = evd.getImaginaryEigenvalues();
         for (int i = 0; i < Wr.length; i++) {
-            double tmp = Math.sqrt(Wr[i]*Wr[i] + Wi[i]*Wi[i]);
-            if (rho < tmp) rho = tmp;
+            double tmp = Math.sqrt(Wr[i] * Wr[i] + Wi[i] * Wi[i]);
+            if (rho < tmp)
+                rho = tmp;
         }
         return rho;
     }

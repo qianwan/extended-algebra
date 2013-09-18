@@ -198,7 +198,7 @@ public class BaseStation extends Entity {
         for (int i = 0; i < direction.length; i++) {
             direction[i] = powerAllocation.get(ueList[i]) - subgradient.get(ueList[i]);
         }
-        double relaxL = -100;
+        double relaxL = 0.0;
         double relaxH = 100;
         double totalPower = 0.0;
         double[] projection = new double[ueList.length];

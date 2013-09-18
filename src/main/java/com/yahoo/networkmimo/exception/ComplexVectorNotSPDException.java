@@ -6,6 +6,7 @@ public class ComplexVectorNotSPDException extends RuntimeException {
     public ComplexVectorNotSPDException() {
         super();
     }
+
     public ComplexVectorNotSPDException(String msg) {
         super(msg);
     }

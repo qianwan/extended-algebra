@@ -89,12 +89,13 @@ public abstract class Entity implements MIMOChannel {
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double distance = Utils.getEntityDistance(this, e);
         double sigma = getChannelGain(distance, "S-WMMSE");
-        
+
         for (ComplexMatrixEntry entry : H) {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
         }
         mimoChannels.put(e, H);
-        logger.debug("Generate MIMO channel coefficient between " + this + " and " + e.toString() + "\n" + H);
+        logger.debug("Generate MIMO channel coefficient between " + this + " and " + e.toString()
+                + "\n" + H);
         return H;
     }
 
@@ -110,7 +111,7 @@ public abstract class Entity implements MIMOChannel {
     private double getChannelGain(double distance, String mode) {
         if (mode.equalsIgnoreCase("S-WMMSE")) {
             double L = Math.pow(10, rng.nextValue() * 8 / 10.0);
-            double sigma2 = Math.pow(200.0/distance, 3) * L;
+            double sigma2 = Math.pow(200.0 / distance, 3) * L;
             return Math.sqrt(sigma2);
         } else {
             logger.error("No such channel gain mode");
