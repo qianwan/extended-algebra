@@ -14,7 +14,7 @@ public class QuadrupleClusterNetworkWMMSE {
         Network network = new Network(2100);
         int Q = 20;
         int I = 40;
-        double SNRdB = 5;
+        double SNRdB = 20;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 2000),
@@ -38,5 +38,16 @@ public class QuadrupleClusterNetworkWMMSE {
             bsAxis.set(index++, bs.getXY());
         }
         System.out.println(bsAxis);
+
+        double total = 0.0;
+        int numCases = 100;
+        for (int i = 0; i < numCases; i++) {
+            network.refresh();
+            network.optimizeWMMSE();
+            network.brownianMotion(2000 / sqrt(3));
+            System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
+            total += network.getSumRate();
+        }
+        System.out.println("Avg sum rate is " + total / numCases);
     }
 }

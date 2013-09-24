@@ -10,20 +10,20 @@ import com.yahoo.algebra.matrix.DenseComplexVector;
 public class DoubleClusterNetworkPrimal {
     @Test
     public void testIt() {
-        Network network = new Network(2100);
-        int Q = 20;
-        int I = 40;
+        Network network = new Network(1100);
+        int Q = 5;
+        int I = 10;
         double SNRdB = 5;
-        double SNR = Math.pow(10, SNRdB / 10);
+        double SNR = Math.pow(10, SNRdB / 10) / 4;
         double P = SNR / Q;
-        Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 2000) };
+        Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 1000) };
         for (Cluster cluster : clusters) {
-            cluster.generateRandomBSs(4, P, Q, 2000 / sqrt(3));
-            cluster.generateRandomUEs(2, I, 2000 / sqrt(3));
+            cluster.generateRandomBSs(4, P, Q, 1000 / sqrt(3));
+            cluster.generateRandomUEs(2, I, 1000 / sqrt(3));
             network.addCluster(cluster);
         }
 
-        network.brownianMotion(2000 / sqrt(3));
+        network.brownianMotion(1000 / sqrt(3));
         ComplexVector ueAxis = new DenseComplexVector(I * clusters.length);
         int index = 0;
         for (UE ue : network.getUEs()) {
@@ -42,7 +42,7 @@ public class DoubleClusterNetworkPrimal {
         for (int i = 0; i < numCases; i++) {
             network.refresh();
             network.optimizePrimalProblem();
-            network.brownianMotion(2000 / sqrt(3));
+            network.brownianMotion(1000 / sqrt(3));
             System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
             total += network.getSumRate();
         }
