@@ -19,7 +19,7 @@ public class QuadrupleClusterNetworkWMMSE {
         double P = SNR / Q;
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 2000),
                 new Cluster(2000 * Math.cos(Math.PI / 6), 2000 * Math.sin(Math.PI / 6)),
-                new Cluster(2000 * Math.cos(Math.PI / 6), -2000 * Math.sin(Math.PI / 6)) };
+                new Cluster(-2000 * Math.cos(Math.PI / 6), 2000 * Math.sin(Math.PI / 6)) };
         for (Cluster cluster : clusters) {
             cluster.generateRandomBSs(4, P, Q, 2000 / sqrt(3));
             cluster.generateRandomUEs(2, I, 2000 / sqrt(3));
