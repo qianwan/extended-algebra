@@ -94,18 +94,13 @@ public abstract class Entity implements MIMOChannel {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
         }
         mimoChannels.put(e, H);
-        logger.debug("Generate MIMO channel coefficient between " + this + " and " + e.toString()
-                + "\n" + H);
+//        logger.debug("Generate MIMO channel coefficient between " + this + " and " + e.toString()
+//                + "\n" + H);
         return H;
     }
 
     public ComplexMatrix getMIMOChannel(Entity e) {
-        ComplexMatrix H = mimoChannels.get(e);
-        if (H == null) {
-            H = genenerateMIMOChannel(e);
-            mimoChannels.put(e, H);
-        }
-        return H;
+        return mimoChannels.get(e);
     }
 
     private double getChannelGain(double distance, String mode) {

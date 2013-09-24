@@ -1,11 +1,13 @@
 package com.yahoo.networkmimo;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexVector;
@@ -23,6 +25,8 @@ public class Network {
     private final Set<UE> ues = Sets.newHashSet();
 
     private final MultiKeyMap MMatrixMap = new MultiKeyMap();
+
+    private final Map<Cluster, ComplexMatrix> mmseMMatrixMap = Maps.newHashMap();
 
     private double closureDistance;
 
@@ -123,6 +127,31 @@ public class Network {
         }
     }
 
+    public void updateMmseMMatrixMap() {
+        for (Cluster cluster : clusters) {
+            ComplexMatrix M = new DenseComplexMatrix(cluster.getNumAntennas(),
+                    cluster.getNumAntennas());
+            M.zero();
+            for (Cluster l : clusters) {
+                for (UE i : l.getUEs()) {
+                    ComplexMatrix H = l.getMIMOChannel(i);
+                    ComplexVector Hu = H.hermitianTranspose(
+                            new DenseComplexMatrix(H.numColumns(), H.numRows())).mult(
+                            i.getRxPreVector(), new DenseComplexVector(H.numColumns()));
+                    ComplexMatrix HuuH = Hu.mult(Hu.conjugate(new DenseComplexVector(Hu.size())),
+                            new DenseComplexMatrix(Hu.size(), Hu.size()));
+                    HuuH.scale(new double[] { i.getMMSEWeight(), 0 });
+                    M.add(HuuH);
+                }
+            }
+            mmseMMatrixMap.put(cluster, M);
+        }
+    }
+
+    public ComplexMatrix getMmseMMatrix(Cluster cluster) {
+        return mmseMMatrixMap.get(cluster);
+    }
+
     public ComplexMatrix getMMatrix(BaseStation q, BaseStation p) {
         return (ComplexMatrix) MMatrixMap.get(q, p);
     }
@@ -131,20 +160,20 @@ public class Network {
         return closureDistance;
     }
 
-    public void iterate() {
+    public void iterateWithinUEs() {
         updateMMatrixMap();
         for (UE ue : ues) {
             ue.optimize();
         }
-        for (UE ue : ues) {
-            ue.updateVariables();
-        }
         for (BaseStation q : bss) {
             logger.debug("Optimization in " + q);
-            q.optimizePowerAllocation();
             logger.debug("Multipliers of " + q + ": " + q.getSubgradients());
+            q.optimizePowerAllocation();
             logger.debug("Real power allocation of " + q + ": " + q.getRealPowerAllocations());
             logger.debug("New power allocation of " + q + ": " + q.getPowerAllocations());
+        }
+        for (UE ue : ues) {
+            ue.updateVariables();
         }
         BaseStation.iteration++;
         logger.debug("Sum rate is " + getSumRate());
@@ -156,8 +185,14 @@ public class Network {
             int numUEs = l.getUEs().size();
             double powerBudget = q.getPowerBudget();
             q.clearPowerAllocation();
-            for (UE i : l.getUEs()) {
-                q.setPowerAllocation(i, powerBudget / numUEs);
+            for (Cluster c : q.getCluster().getClusterClosure()) {
+                for (UE i : c.getUEs()) {
+                    if (c == q.getCluster()) {
+                        q.setPowerAllocation(i, powerBudget / numUEs);
+                    } else {
+                        q.setPowerAllocation(i, 0.0);
+                    }
+                }
             }
             logger.debug("Initial average power allocation within the located cluster from " + q
                     + ": " + powerBudget / numUEs);
@@ -171,11 +206,23 @@ public class Network {
             for (UE i : ues) {
                 q.genenerateMIMOChannel(i);
             }
+            for (Cluster c : q.getCluster().getClusterClosure()) {
+                for (UE i : c.getUEs()) {
+                    q.getSubgradients().put(i, 0.0);
+                }
+            }
+        }
+        for (Cluster cluster : clusters) {
+            cluster.assembleMIMOChannel();
+        }
+        for (UE ue : ues) {
+            ue.updateLambdaMap();
         }
         generateFeasibleInitialVariables();
         for (UE ue : ues) {
             ue.updateVariables();
         }
+        BaseStation.iteration = 1;
         logger.debug("Sum rate is " + getSumRate());
     }
 
@@ -192,27 +239,217 @@ public class Network {
         for (UE ue : ues) {
             for (Cluster l : ue.getCluster().getClusterClosure()) {
                 for (BaseStation q : l.getBSs()) {
-                    ret -= ue.getLambda() * q.getTxPreVector(ue).norm(Norm.Two);
+                    ret -= ue.getLambda(q) * q.getTxPreVector(ue).norm(Norm.Two);
                 }
             }
         }
         return ret;
     }
 
-    public void optimize() {
+    public void optimizeFromUEs() {
         double prev = 0.0;
         double objectiveValue = objectiveValue();
         do {
             prev = objectiveValue();
-            iterate();
+            iterateWithinUEs();
             objectiveValue = objectiveValue();
             logger.debug("Objective value is " + objectiveValue);
         } while (Math.abs(prev - objectiveValue) > 1e-1);
         logger.info("Optimized sum rate is " + getSumRate());
     }
 
+    public void optimizeFromBSs() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValue();
+        do {
+            prev = objectiveValue;
+            iterateWithinBSs();
+            objectiveValue = objectiveValue();
+            logger.debug("Objective value is " + objectiveValue);
+        } while (Math.abs(prev - objectiveValue) > 1e-1);
+        logger.info("Optimized sum rate is " + getSumRate());
+    }
+
+    private void iterateWithinBSs() {
+        updateMMatrixMap();
+        for (BaseStation bs : bss) {
+            bs.optimize();
+        }
+        for (BaseStation q : bss) {
+            logger.debug("Power reallocation in " + q);
+            logger.debug("Multipliers of " + q + ": " + q.getSubgradients());
+            q.optimizePowerAllocation();
+            logger.debug("Real power allocation of " + q + ": " + q.getRealPowerAllocations());
+            logger.debug("New power allocation of " + q + ": " + q.getPowerAllocations());
+        }
+        for (UE ue : ues) {
+            ue.updateVariables();
+        }
+        BaseStation.iteration++;
+        logger.debug("Sum rate is " + getSumRate());
+    }
+
+    public void optimizeWMMSE() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValueWMMSE();
+        do {
+            prev = objectiveValue;
+            iterateWMMSE();
+            objectiveValue = objectiveValueWMMSE();
+            logger.debug("Objective value is " + objectiveValue);
+        } while (Math.abs(prev - objectiveValue) > 1e-1);
+        logger.info("Optimized sum rate is " + getSumRate());
+    }
+
+    private double objectiveValueWMMSE() {
+        return getSumRate();
+    }
+
+    private void iterateWMMSE() {
+        updateMmseMMatrixMap();
+        for (Cluster cluster : clusters) {
+            double multiplier = cluster.searchMultiplier();
+            cluster.iterateWMMSE(multiplier);
+        }
+
+        for (UE ue : ues) {
+            ue.updateVariables();
+        }
+        BaseStation.iteration++;
+        logger.debug("Sum rate is " + getSumRate());
+    }
+
+    public void optimizeAmongBSsUEs() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValue();
+        do {
+            prev = objectiveValue;
+            iterateAmongBSsUEs();
+            objectiveValue = objectiveValue();
+            logger.debug("Objective value is " + objectiveValue);
+        } while (Math.abs(prev - objectiveValue) > 1e-1);
+        logger.info("Optimized sum rate is " + getSumRate());
+    }
+
+    public void optimizePrimalProblem() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValue();
+        while (Math.abs(prev - objectiveValue) > 1e-1) {
+            for (BaseStation q : bss) {
+                q.optimizePowerAllocation();
+            }
+            prev = objectiveValue;
+            iteratePrimalProblem();
+            objectiveValue = objectiveValue();
+            logger.debug("Objective value is " + objectiveValue);
+        }
+    }
+
+    private void iteratePrimalProblem() {
+        double prev = 0.0;
+        double objectiveValue = objectiveValue();
+        do {
+            prev = objectiveValue;
+            iterateSubproblem();
+            objectiveValue = objectiveValue();
+        } while (Math.abs(prev - objectiveValue) > 1e-1);
+    }
+
+    private void iterateSubproblem() {
+        updateMMatrixMap();
+        for (UE ue : ues) {
+            for (Cluster l : ue.getCluster().getClusterClosure()) {
+                for (BaseStation q : l.getBSs()) {
+                    q.setSubgradient(ue, -ue.blockCoordinateDescent(q));
+                }
+            }
+        }
+        for (UE ue : ues) {
+            ue.updateVariables();
+        }
+    }
+
+    private void iterateAmongBSsUEs() {
+        updateMMatrixMap();
+        // initial iteration
+        for (UE ue : ues) {
+            for (Cluster l : ue.getCluster().getClusterClosure()) {
+                for (BaseStation q : l.getBSs()) {
+                    q.setSubgradient(ue, -ue.blockCoordinateDescent(q));
+                }
+            }
+        }
+        // descent iterations
+        boolean descentDone = true;
+        do {
+            descentDone = true;
+            for (UE ue : ues) {
+                for (Cluster l : ue.getCluster().getClusterClosure()) {
+                    for (BaseStation q : l.getBSs()) {
+                        descentDone &= ue.blockCoordinateDescentWrapper(q);
+                    }
+                }
+            }
+        } while (!descentDone);
+
+        for (BaseStation q : bss) {
+            logger.debug("Power reallocation in " + q);
+            logger.debug("Multipliers of " + q + ": " + q.getSubgradients());
+            q.optimizePowerAllocation();
+            q.updateTxPreVectors();
+            logger.debug("Real power allocation of " + q + ": " + q.getRealPowerAllocations());
+            logger.debug("New power allocation of " + q + ": " + q.getPowerAllocations());
+        }
+        for (UE ue : ues) {
+            ue.updateVariables();
+        }
+        BaseStation.iteration++;
+        logger.debug("Sum rate is " + getSumRate());
+    }
+
     @Override
     public String toString() {
         return String.format("NETWORK");
+    }
+
+    public void brownianMotion(double r) {
+        for (Cluster cluster : clusters) {
+            for (BaseStation bs : cluster.getBSs()) {
+                boolean valid = false;
+                double x;
+                double y;
+                do {
+                    valid = true;
+                    x = (Cluster.rng.nextValue() - 0.5) * 2 * r;
+                    y = (Cluster.rng.nextValue() - 0.5) * 2 * r;
+                    double mirrorX = Math.abs(x);
+                    double mirrorY = Math.abs(y);
+                    if ((mirrorY > r * Math.sin(Math.PI / 3))) {
+                        valid = false;
+                    } else if ((Math.sqrt(3) * mirrorX + mirrorY) > (r * Math.sqrt(3))) {
+                        valid = false;
+                    }
+                } while (!valid);
+                bs.setXY(cluster.getXY()[0] + x, cluster.getXY()[1] + y);
+            }
+            for (UE ue : cluster.getUEs()) {
+                boolean valid = false;
+                double x;
+                double y;
+                do {
+                    valid = true;
+                    x = (Cluster.rng.nextValue() - 0.5) * 2 * r;
+                    y = (Cluster.rng.nextValue() - 0.5) * 2 * r;
+                    double mirrorX = Math.abs(x);
+                    double mirrorY = Math.abs(y);
+                    if ((mirrorY > r * Math.sin(Math.PI / 3))) {
+                        valid = false;
+                    } else if ((Math.sqrt(3) * mirrorX + mirrorY) > (r * Math.sqrt(3))) {
+                        valid = false;
+                    }
+                } while (!valid);
+                ue.setXY(cluster.getXY()[0] + x, cluster.getXY()[1] + y);
+            }
+        }
     }
 }

@@ -42,7 +42,7 @@ public class DenseComplexVector extends AbstractComplexVector implements Seriali
         super(x);
 
         if (deep) {
-            data = new double[size];
+            data = new double[size * 2];
             set(x);
         } else
             data = ((DenseComplexVector) x).getData();

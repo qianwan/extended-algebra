@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import static java.lang.Math.abs;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -30,10 +32,7 @@ public class UE extends Entity {
 
     private Map<BaseStation, ComplexVector> cVectorMap = Maps.newHashMap();
 
-    /**
-     * sparsity penalty
-     */
-    private double lambda;
+    private Map<BaseStation, Double> lambdaMap = Maps.newHashMap();
 
     /**
      * Weight matrix for MMSE
@@ -60,14 +59,12 @@ public class UE extends Entity {
      * @param numStreams
      *            number of data streams
      */
-    public UE(double x, double y, int numAntennas, double lambda) {
+    public UE(double x, double y, int numAntennas) {
         super(x, y, Entity.Type.UE, numAntennas);
-        this.lambda = lambda;
     }
 
-    public UE(double x, double y, int numAntennas, double lambda, String name) {
+    public UE(double x, double y, int numAntennas, String name) {
         super(x, y, Entity.Type.UE, numAntennas);
-        this.lambda = lambda;
         this.name = name;
     }
 
@@ -95,14 +92,20 @@ public class UE extends Entity {
 
     public boolean isToBeServedBy(BaseStation q) {
         ComplexVector cVector = cVectorMap.get(q);
-        if (cVector == null || cVector.norm(Norm.Two) <= lambda / 2)
+        if (cVector == null || cVector.norm(Norm.Two) <= lambdaMap.get(q) / 2)
             return false;
         else
             return true;
     }
 
     public ComplexVector getCVector(BaseStation q) {
-        return (ComplexVector) cVectorMap.get(q);
+        if (!cluster.getClusterClosure().contains(q.getCluster()))
+            return null;
+        ComplexVector c = (ComplexVector) cVectorMap.get(q);
+        if (c != null)
+            return c;
+        else
+            return updateCVector(q);
     }
 
     public void updateCVectorMap() {
@@ -120,7 +123,7 @@ public class UE extends Entity {
      * @return The irrelevant part of partial derivative over Base Station
      *         <code>q</code>, <code>c<sub>ik</sub><sup>ql</sup></code>
      */
-    private ComplexVector updateCVector(BaseStation q) {
+    public ComplexVector updateCVector(BaseStation q) {
         Cluster l = q.getCluster();
         ComplexVector cVector = new DenseComplexVector(q.getNumAntennas());
         cVector.zero();
@@ -160,23 +163,22 @@ public class UE extends Entity {
         return cVector;
     }
 
-    private double getUpperBoundOfLagrangianMultiplier(BaseStation q) {
+    public double getUpperBoundOfLagrangianMultiplier(BaseStation q) {
         double muH = 0.0;
         double factor = Math.pow(q.getPowerBudget() / q.getNumberOfUEsToBeServed(), -0.5);
         for (UE ue : q.getUEsToBeServed()) {
-            double tmp = factor * ue.getCVector(q).norm(Norm.Two);
+            double tmp = factor * ue.updateCVector(q).norm(Norm.Two);
             if (muH < tmp)
                 muH = tmp;
         }
         return muH;
     }
 
-    private double getUpperBoundOfInverseOfTxPreVectorNorm(BaseStation q) {
+    public double getUpperBoundOfInverseOfTxPreVectorNorm(BaseStation q, double miuHigh) {
         double thetaH = 0.0;
-        double muH = getUpperBoundOfLagrangianMultiplier(q);
         try {
-            thetaH = (ComplexMatrices.spectralRadius(network.getMMatrix(q, q)) + muH)
-                    / (getCVector(q).norm(Norm.Two) - lambda / 2);
+            thetaH = (ComplexMatrices.spectralRadius(network.getMMatrix(q, q)) + miuHigh)
+                    / (getCVector(q).norm(Norm.Two) - lambdaMap.get(q) / 2);
         } catch (NotConvergedException e) {
             logger.error("spectral radius calculation error");
         }
@@ -191,13 +193,16 @@ public class UE extends Entity {
      *            Lagrangian multiplier
      * @param theta
      *            inverse of norm of tx precoding vector
+     * @param lambda
+     *            sparsity penalty
      * @param M
      *            M matrix
      * @param c
      *            c vector
      * @return optimal Lagrangian multiplier
      */
-    public double bisectionTarget(double mu, double theta, ComplexMatrix M, ComplexVector c) {
+    public static double bisectionTarget(double mu, double theta, double lambda, ComplexMatrix M,
+            ComplexVector c) {
         return theta
                 * ComplexMatrices.eye(M.numRows())
                         .scale(new double[] { lambda * theta / 2.0 + mu, 0 }).add(M).inverse()
@@ -210,16 +215,11 @@ public class UE extends Entity {
     public void optimize() {
         Set<Cluster> clusters = cluster.getClusterClosure();
         boolean flag = true;
-        final int maxCount = 25;
-        int count = 0;
         logger.debug("Optimize tx vector to " + this);
         do {
-            if (count++ > maxCount)
-                break;
             for (Cluster l : clusters) {
                 for (BaseStation q : l.getBSs()) {
                     q.setSubgradient(this, -blockCoordinateDescent(q));
-
                 }
             }
             updateCVectorMap();
@@ -228,7 +228,7 @@ public class UE extends Entity {
                 for (BaseStation q : l.getBSs()) {
                     ComplexVector c = getCVector(q);
                     ComplexMatrix M = network.getMMatrix(q, q);
-                    if (c.norm(Norm.Two) <= lambda / 2
+                    if (c.norm(Norm.Two) <= lambdaMap.get(q) / 2
                             && q.getTxPreVector(this).norm(Norm.Two) > 0.01) {
                         flag = true;
                         break;
@@ -243,8 +243,8 @@ public class UE extends Entity {
 
                         ComplexVector right = new DenseComplexVector(q.getNumAntennas());
                         right.set(q.getTxPreVector(this));
-                        right.scale(new double[] { lambda / q.getTxPreVector(this).norm(Norm.Two),
-                                0.0 });
+                        right.scale(new double[] {
+                                lambdaMap.get(q) / q.getTxPreVector(this).norm(Norm.Two), 0.0 });
                         left.add(new double[] { -1, 0 }, right);
                         if (left.norm(Norm.Two) > 0.01) {
                             flag = true;
@@ -255,6 +255,97 @@ public class UE extends Entity {
             }
         } while (flag);
         logger.debug("Optimize tx vector to " + this + " done!");
+    }
+
+    public double blockCoordinateDescentWMMSE(BaseStation q) {
+        logger.debug("WMMSE BCD");
+        ComplexVector c = updateCVector(q);
+        ComplexMatrix M = network.getMMatrix(q, q);
+        ComplexVector v = M.inverse().mult(c, new DenseComplexVector(M.numColumns()));
+        double multiplier = 0.0;
+        if (Math.pow(v.norm(Norm.Two), 2) > q.getPowerAllocation(this)) {
+            double miuLow = 0;
+            double miuHigh = 1;
+            v = ComplexMatrices.eye(q.getNumAntennas()).scale(new double[] { miuHigh, 0 }).add(M)
+                    .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+            while (Math.pow(v.norm(Norm.Two), 2) > q.getPowerAllocation(this)) {
+                miuHigh *= 2;
+                v = ComplexMatrices.eye(q.getNumAntennas()).scale(new double[] { miuHigh, 0 })
+                        .add(M).inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+            }
+            System.out.println(q.getPowerAllocation(this));
+            v = ComplexMatrices.eye(q.getNumAntennas()).scale(new double[] { miuLow, 0 }).add(M)
+                    .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+            System.out.println(Math.pow(v.norm(Norm.Two), 2));
+            v = ComplexMatrices.eye(q.getNumAntennas()).scale(new double[] { miuHigh, 0 }).add(M)
+                    .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+            System.out.println(Math.pow(v.norm(Norm.Two), 2));
+            do {
+                multiplier = (miuLow + miuHigh) / 2;
+                logger.debug("stuck b");
+                v = ComplexMatrices.eye(q.getNumAntennas()).scale(new double[] { multiplier, 0 })
+                        .add(M).inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+                if (Math.pow(v.norm(Norm.Two), 2) > q.getPowerAllocation(this))
+                    miuLow = multiplier;
+                else if (Math.pow(v.norm(Norm.Two), 2) < q.getPowerAllocation(this))
+                    miuHigh = multiplier;
+            } while (Math.abs(Math.pow(v.norm(Norm.Two), 2) - q.getPowerAllocation(this)) > 1e-3);
+        }
+        q.setTxPreVector(this, v);
+        return multiplier;
+    }
+
+    public double blockCoordinateDescentTest(BaseStation q) {
+        ComplexVector c = updateCVector(q);
+        double multiplier = 0.0;
+        double lambda = lambdaMap.get(q);
+        logger.debug("Optimize tx vector from " + q + " to " + this + " with lambda " + lambda);
+        if (c.norm(Norm.Two) <= lambda / 2) {
+            q.getTxPreVector(this).zero();
+            multiplier = 0.0;
+        } else {
+            ComplexMatrix M = network.getMMatrix(q, q);
+            double miuLow = 0.0;
+            double miuHigh = getUpperBoundOfLagrangianMultiplier(q);
+            double theta = 0.0;
+            double targetValue = 0.0;
+            do {
+                multiplier = (miuLow + miuHigh) / 2;
+                double thetaLow = 0;
+                double thetaHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q, miuHigh);
+                do {
+                    theta = (thetaLow + thetaHigh) / 2;
+                    targetValue = bisectionTarget(multiplier, theta, lambda, M, c);
+                    if (targetValue > 1)
+                        thetaHigh = theta;
+                    else
+                        thetaLow = theta;
+                } while (abs(thetaLow - thetaHigh) > 1e-6);
+                if (1 / theta / theta < q.getPowerAllocation(this))
+                    miuHigh = multiplier;
+                else
+                    miuLow = multiplier;
+            } while (abs(miuLow - miuHigh) > 1e-6);
+            ComplexVector v = ComplexMatrices.eye(q.getNumAntennas())
+                    .scale(new double[] { lambda * theta / 2 + multiplier, 0 }).add(M).inverse()
+                    .mult(c, new DenseComplexVector(q.getNumAntennas()));
+            logger.debug("Use block coordinate descent test, get multipler: " + multiplier
+                    + "; theta: " + theta + "; tx vector: " + v);
+            q.setTxPreVector(this, v);
+        }
+        return multiplier;
+    }
+
+    public boolean blockCoordinateDescentWrapper(BaseStation q) {
+        logger.debug("In BCD wrapper");
+        ComplexVector origV = q.getTxPreVector(this);
+        double origMultiplier = -q.getSubgradient(this);
+        double multiplier = blockCoordinateDescent(q);
+        q.setSubgradient(this, -multiplier);
+        if (origV.add(new double[] { -1, 0 }, q.getTxPreVector(this)).norm(Norm.Two) < 1e-3
+                && Math.abs(origMultiplier - multiplier) < 1e-3)
+            return true;
+        return false;
     }
 
     /**
@@ -269,6 +360,8 @@ public class UE extends Entity {
         logger.debug("Optimize tx vector from " + q + " to " + this);
         double multiplier = 0.0;
         double theta = 0.0;
+        double lambda = lambdaMap.get(q);
+        logger.debug("Norm of c vector " + c.norm(Norm.Two));
         if (c.norm(Norm.Two) <= lambda / 2) {
             q.getTxPreVector(this).zero();
             multiplier = 0.0;
@@ -276,49 +369,58 @@ public class UE extends Entity {
         } else {
             ComplexMatrix M = network.getMMatrix(q, q);
             theta = 1 / Math.sqrt(q.getPowerAllocation(this));
-            double targetValue = bisectionTarget(0, theta, M, c);
-            if (targetValue > 1.0) {
-                double mLow = 0.0;
-                double mHigh = getUpperBoundOfLagrangianMultiplier(q);
-                while (bisectionTarget(mHigh, theta, M, c) >= 1.0) {
-                    mHigh *= 2;
-                }
-                do {
-                    multiplier = (mLow + mHigh) / 2;
-                    targetValue = bisectionTarget(multiplier, theta, M, c);
-                    if (targetValue > 1)
-                        mLow = multiplier;
-                    else
-                        mHigh = multiplier;
-                } while (Math.abs(targetValue - 1) > 1e-6);
-            } else if (targetValue < 1.0) {
-                double tLow = theta;
-                double tHigh = getUpperBoundOfInverseOfTxPreVectorNorm(q);
-                multiplier = 0.0;
-                while (bisectionTarget(multiplier, tHigh, M, c) < 1.0) {
-                    tHigh *= 2.0;
-                }
-                if (Double.isInfinite(tHigh)) {
-                    theta = tHigh;
-                } else {
+            if (Double.isInfinite(theta)) {
+                logger.debug("No power allocation, theta is infinite");
+            }
+            if (!Double.isInfinite(theta)) {
+                double targetValue = bisectionTarget(0, theta, lambda, M, c);
+                if (targetValue > 1.0) {
+                    double miuLow = 0.0;
+                    double miuHigh = 1; // getUpperBoundOfLagrangianMultiplier(q);
+                    while (bisectionTarget(miuHigh, theta, lambda, M, c) >= 1.0) {
+                        miuHigh *= 2;
+                    }
                     do {
-                        theta = (tLow + tHigh) / 2;
-                        targetValue = bisectionTarget(multiplier, theta, M, c);
+                        multiplier = (miuLow + miuHigh) / 2;
+                        targetValue = bisectionTarget(multiplier, theta, lambda, M, c);
                         if (targetValue > 1)
-                            tHigh = theta;
-                        else
-                            tLow = theta;
-                    } while (Math.abs(targetValue - 1) > 1e-6);
+                            miuLow = multiplier;
+                        else if (targetValue < 1)
+                            miuHigh = multiplier;
+                    } while (Math.abs(miuLow - miuHigh) > 1e-6);
+                } else if (targetValue < 1.0) {
+                    double tLow = theta;
+                    double tHigh = theta * 2;
+                    // getUpperBoundOfInverseOfTxPreVectorNorm(q,
+                    // getUpperBoundOfLagrangianMultiplier(q));
+                    multiplier = 0.0;
+                    while (bisectionTarget(multiplier, tHigh, lambda, M, c) <= 1.0) {
+                        tHigh *= 2.0;
+                    }
+                    if (Double.isInfinite(tHigh)) {
+                        theta = tHigh;
+                        logger.debug("Theta approaches infinity when calculate upper bound of theta");
+                    } else {
+                        do {
+                            theta = (tLow + tHigh) / 2;
+                            targetValue = bisectionTarget(multiplier, theta, lambda, M, c);
+                            if (targetValue > 1)
+                                tHigh = theta;
+                            else if (targetValue < 1)
+                                tLow = theta;
+                        } while (Math.abs(tHigh - tLow) > 1e-6);
+                    }
                 }
             }
             ComplexVector v = null;
             if (Double.isInfinite(theta)) {
                 v = new DenseComplexVector(q.getNumAntennas());
                 v.zero();
-            } else
+            } else {
                 v = ComplexMatrices.eye(q.getNumAntennas())
                         .scale(new double[] { lambda * theta / 2 + multiplier, 0 }).add(M)
                         .inverse().mult(c, new DenseComplexVector(q.getNumAntennas()));
+            }
             logger.debug("Use block coordinate descent, get multipler: " + multiplier + "; theta: "
                     + theta + "; tx vector: " + v);
             q.setTxPreVector(this, v);
@@ -448,16 +550,119 @@ public class UE extends Entity {
         return rate;
     }
 
-    public void setLambda(double lambda) {
-        this.lambda = lambda;
-    }
-
     @Override
     public String toString() {
-        return String.format("UE#%s@(%.4f,%.4f)", name, getXY()[0], getXY()[1]);
+        return String.format("UE#%s", name, getXY()[0], getXY()[1]);
     }
 
-    public double getLambda() {
+    public ComplexMatrix calculateCMatrix1() {
+        ComplexMatrix C = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        C.zero();
+        ComplexMatrix L = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        L.zero();
+        ComplexMatrix localHvvH = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        localHvvH.zero();
+        ComplexVector localHv = new DenseComplexVector(getNumAntennas());
+        localHv.zero();
+
+        for (Cluster l : network.getClusters()) {
+            for (Cluster lPrim : network.getClusters()) {
+                Set<Cluster> commonClusters = Sets.intersection(l.getClusterClosure(),
+                        lPrim.getClusterClosure());
+                for (Cluster m : commonClusters) {
+                    for (UE j : m.getUEs()) {
+                        ComplexMatrix HvvH = null;
+                        ComplexVector HliVlj = new DenseComplexVector(getNumAntennas());
+                        HliVlj.zero();
+                        for (BaseStation q : l.getBSs()) {
+                            HliVlj.add(q.getMIMOChannel(this).mult(q.getTxPreVector(j),
+                                    new DenseComplexVector(HliVlj.size())));
+                        }
+                        if (l == lPrim) {
+                            HvvH = HliVlj.mult(
+                                    HliVlj.conjugate(new DenseComplexVector(HliVlj.size())),
+                                    new DenseComplexMatrix(HliVlj.size(), HliVlj.size()));
+                            if (j == this) {
+                                localHvvH.add(HvvH);
+                                localHv.add(HliVlj);
+                            }
+                        } else {
+                            ComplexVector Hl_iVl_j = new DenseComplexVector(getNumAntennas());
+                            Hl_iVl_j.zero();
+                            for (BaseStation q : lPrim.getBSs()) {
+                                Hl_iVl_j.add(q.getMIMOChannel(this).mult(q.getTxPreVector(j),
+                                        new DenseComplexVector(Hl_iVl_j.size())));
+                            }
+                            HvvH = HliVlj.mult(
+                                    Hl_iVl_j.conjugate(new DenseComplexVector(Hl_iVl_j.size())),
+                                    new DenseComplexMatrix(HliVlj.size(), HliVlj.size()));
+                        }
+                        C.add(HvvH);
+                    }
+                }
+            }
+        }
+        C.add(new double[] { N0, 0 }, ComplexMatrices.eye(C.numRows()));
+        return C;
+    }
+
+    public ComplexMatrix calculateCMatrix2() {
+        ComplexMatrix C = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        C.zero();
+        for (Cluster l : network.getClusters()) {
+            for (UE j : l.getUEs()) {
+                for (Cluster l1 : l.getClusterClosure()) {
+                    for (BaseStation q1 : l1.getBSs()) {
+                        for (Cluster l2 : l.getClusterClosure()) {
+                            for (BaseStation q2 : l2.getBSs()) {
+                                ComplexVector Hv = q1.getMIMOChannel(this).mult(
+                                        q1.getTxPreVector(j),
+                                        new DenseComplexVector(getNumAntennas()));
+                                ComplexVector Hv_ = q2.getMIMOChannel(this).mult(
+                                        q2.getTxPreVector(j),
+                                        new DenseComplexVector(getNumAntennas()));
+                                C.add(Hv.mult(Hv_.conjugate(new DenseComplexVector(Hv_.size())),
+                                        new DenseComplexMatrix(Hv.size(), Hv.size())));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        C.add(new double[] { N0, 0 }, ComplexMatrices.eye(C.numRows()));
+        return C;
+    }
+
+    public double updateLambda(BaseStation q) {
+        if (!cluster.getClusterClosure().contains(q.getCluster())) {
+            logger.error("Non-adjacent BS-UE pair should not be optimized");
+            return Double.MAX_VALUE;
+        }
+        // ComplexMatrix H = q.getMIMOChannel(this);
+        // double rxPower = H.mult(
+        // H.hermitianTranspose(new DenseComplexMatrix(H.numColumns(),
+        // H.numRows()))).trace()[0];
+        double lambda = 0.01;
+        lambdaMap.put(q, lambda);
+        // lambdaMap.put(q, 0.2);
         return lambda;
+    }
+
+    public void updateLambdaMap() {
+        for (Cluster l : getCluster().getClusterClosure()) {
+            for (BaseStation q : l.getBSs()) {
+                updateLambda(q);
+            }
+        }
+    }
+
+    public double getLambda(BaseStation q) {
+        if (!lambdaMap.containsKey(q))
+            return Double.MAX_VALUE;
+        return lambdaMap.get(q);
+    }
+
+    public Map<BaseStation, Double> getLambdaMap() {
+        return lambdaMap;
     }
 }

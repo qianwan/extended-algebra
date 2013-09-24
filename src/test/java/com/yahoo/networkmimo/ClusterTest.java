@@ -38,4 +38,17 @@ public class ClusterTest {
         Assert.assertTrue(closure2.contains(cluster4));
         Assert.assertTrue(closure2.contains(cluster6));
     }
+
+    @Test
+    public void randomBSandUETest() {
+        Network network = new Network(2100);
+        Cluster cluster = new Cluster(0, 0);
+        cluster.generateRandomBSs(4, 2, 5, 1000);
+        cluster.generateRandomUEs(2, 3, 1000);
+        network.addCluster(cluster);
+        System.out.println(network.getBSs());
+        System.out.println(network.getUEs());
+        System.out.println(cluster.getBSs());
+        System.out.println(cluster.getUEs());
+    }
 }

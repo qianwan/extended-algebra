@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import static com.yahoo.networkmimo.UE.bisectionTarget;
+
 import org.testng.annotations.Test;
 
 import com.yahoo.algebra.matrix.ComplexMatrices;
@@ -36,11 +38,11 @@ public class BisectionTargetFunctionTest {
         c.set(2, new double[] { 3.757818e-02, 2.239566e-02 });
         c.set(3, new double[] { -8.710739e-02, -4.788983e-02 });
 
-        UE ue = new UE(0, 0, 0, 0.3);
         double power = 5.0;
         double theta = Math.sqrt(1.0 / power);
         theta = 1 / Math.sqrt(5);
-        System.out.println(ue.bisectionTarget(-0.3 * theta / 2, theta, M, c));
+        double lambda = 0.3;
+        System.out.println(bisectionTarget(-0.3 * theta / 2, theta, lambda, M, c));
     }
 
     public static double gradient(double miu, double theta, ComplexMatrix M, ComplexVector c) {

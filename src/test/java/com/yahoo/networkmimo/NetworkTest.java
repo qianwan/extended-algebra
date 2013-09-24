@@ -45,7 +45,7 @@ public class NetworkTest {
             }
             for (int i = 0; i < 4; i++) {
                 cluster.addUE(new UE(cluster.getXY()[0] + (0.5 - Math.random()) * 2000, cluster
-                        .getXY()[1] + (0.5 - Math.random()) * 2000, 2, 1));
+                        .getXY()[1] + (0.5 - Math.random()) * 2000, 2));
             }
         }
     }

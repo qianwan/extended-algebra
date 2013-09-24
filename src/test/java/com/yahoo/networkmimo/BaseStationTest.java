@@ -25,9 +25,8 @@ public class BaseStationTest {
         Assert.assertEquals(bs.getXY()[1], 0.0);
         Assert.assertEquals(bs.getNumAntennas(), 4);
 
-        UE ue1 = new UE(500, 500, 4, 2);
+        UE ue1 = new UE(500, 500, 4);
         DenseComplexMatrix H1 = new DenseComplexMatrix(bs.getMIMOChannel(ue1));
-        // TODO
         Assert.assertTrue(H1.equals(bs.getMIMOChannel(ue1)));
     }
 }

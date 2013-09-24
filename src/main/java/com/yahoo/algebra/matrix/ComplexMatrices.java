@@ -5,6 +5,7 @@ import no.uib.cipr.matrix.EVD;
 import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.NotConvergedException;
 
+import org.jblas.NativeBlas;
 import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
@@ -144,5 +145,46 @@ public final class ComplexMatrices {
                 rho = tmp;
         }
         return rho;
+    }
+
+    public static void eig(ComplexMatrix A, ComplexMatrix V, ComplexVector lambda)
+            throws NotConvergedException {
+        if (!A.isSquare()) {
+            throw new ComplexMatrixNotSPDException("eigenvalue decomposition is for squre matrix");
+        }
+        double[] data = new double[A.numRows() * A.numColumns() * 2];
+        for (int i = 0; i < A.numRows(); i++) {
+            for (int j = 0; j < A.numColumns(); j++) {
+                int offset = (j * V.numColumns() + i) * 2;
+                data[offset] = A.get(i, j)[0];
+                data[offset + 1] = A.get(i, j)[1];
+            }
+        }
+        double[] w = new double[A.numRows() * 2];
+        double[] vl = new double[data.length];
+        double[] vr = new double[data.length];
+        double[] work = new double[data.length];
+        int row = A.numRows();
+        int info = NativeBlas.zgeev('V', 'V', row, data, 0, row, w, 0, vl, 0, row, vr, 0, row,
+                work, 0);
+        if (info > 0)
+            throw new ComplexMatrixNotSPDException("Eigenvalues have not converged.");
+        for (int i = 0; i < lambda.size(); i++) {
+            lambda.set(i, new double[] { w[i * 2], w[i * 2 + 1] });
+        }
+        for (int i = 0; i < V.numRows(); i++) {
+            for (int j = 0; j < V.numColumns(); j++) {
+                int offset = (j * V.numColumns() + i) * 2;
+                V.set(i, j, new double[] { vr[offset], vr[offset + 1] });
+            }
+        }
+    }
+
+    public static ComplexMatrix diag(ComplexVector v) {
+        ComplexMatrix A = new DenseComplexMatrix(v.size(), v.size());
+        A.zero();
+        for (int i = 0; i < v.size(); i++)
+            A.set(i, i, v.get(i));
+        return A;
     }
 }
