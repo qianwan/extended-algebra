@@ -2,49 +2,51 @@ package com.yahoo.networkmimo;
 
 import static java.lang.Math.sqrt;
 
+import java.util.List;
+
 import org.testng.annotations.Test;
 
-import com.yahoo.algebra.matrix.ComplexVector;
-import com.yahoo.algebra.matrix.DenseComplexVector;
+import com.google.common.collect.Lists;
+import com.yahoo.algebra.matrix.ComplexVector.Norm;
 
 public class DoubleClusterNetworkPrimal {
     @Test
     public void testIt() {
-        Network network = new Network(1100);
-        int Q = 5;
-        int I = 10;
-        double SNRdB = 20;
-        double SNR = Math.pow(10, SNRdB / 10) / 4;
+        Network network = new Network(2100);
+        int Q = 20;
+        int I = 40;
+        double SNRdB = 0;
+        double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
-        Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 1000) };
+        System.out.println("P = " + P);
+        Cluster[] clusters = new Cluster[] { new Cluster(0, 0, "1"), new Cluster(0, 2000, "2") };
         for (Cluster cluster : clusters) {
-            cluster.generateRandomBSs(4, P, Q, 1000 / sqrt(3));
-            cluster.generateRandomUEs(2, I, 1000 / sqrt(3));
+            cluster.generateRandomBSs(4, P, Q, 2000 / sqrt(3));
+            cluster.generateRandomUEs(2, I, 2000 / sqrt(3));
             network.addCluster(cluster);
         }
 
-        network.brownianMotion(1000 / sqrt(3));
-        ComplexVector ueAxis = new DenseComplexVector(I * clusters.length);
-        int index = 0;
-        for (UE ue : network.getUEs()) {
-            ueAxis.set(index++, ue.getXY());
-        }
-        System.out.println(ueAxis);
-        ComplexVector bsAxis = new DenseComplexVector(Q * clusters.length);
-        index = 0;
-        for (BaseStation bs : network.getBSs()) {
-            bsAxis.set(index++, bs.getXY());
-        }
-        System.out.println(bsAxis);
-
         double total = 0.0;
-        int numCases = 100;
+        double numServingBSs = 0.0;
+        int numCases = 10;
+        network.refresh();
         for (int i = 0; i < numCases; i++) {
             network.refresh();
             network.optimizePrimalProblem();
-            network.brownianMotion(1000 / sqrt(3));
+            network.brownianMotion(2000 / sqrt(3));
             System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
             total += network.getSumRate();
+            numServingBSs = 0.0;
+            for (UE ue : network.getUEs()) {
+                List<BaseStation> servingBSs = Lists.newArrayList();
+                servingBSs.clear();
+                for (BaseStation bs : network.getBSs()) {
+                    if (bs.getTxPreVector(ue).norm(Norm.Two) > 1e-6)
+                        servingBSs.add(bs);
+                }
+                numServingBSs += servingBSs.size();
+            }
+            System.out.println("Avg number of serving BSs " + (numServingBSs / I));
         }
         System.out.println("Avg sum rate is " + total / numCases);
     }

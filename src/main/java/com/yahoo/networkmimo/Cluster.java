@@ -141,6 +141,13 @@ public class Cluster extends Entity {
         return mimoChannels.get(e);
     }
 
+    /**
+     * 
+     * @param numAntennas number of antennas
+     * @param power power budget
+     * @param num number of base stations
+     * @param r outer radius
+     */
     public void generateRandomBSs(int numAntennas, double power, int num, double r) {
         for (int i = 0; i < num; i++) {
             boolean valid = false;
@@ -163,6 +170,12 @@ public class Cluster extends Entity {
         }
     }
 
+    /**
+     * 
+     * @param numAntennas number of antennas
+     * @param num number of user equipment
+     * @param r outer radius
+     */
     public void generateRandomUEs(int numAntennas, int num, double r) {
         for (int i = 0; i < num; i++) {
             boolean valid = false;

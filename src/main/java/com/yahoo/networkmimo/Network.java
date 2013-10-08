@@ -184,15 +184,13 @@ public class Network {
     private void generateFeasibleInitialVariables() {
         for (BaseStation q : bss) {
             Cluster l = q.getCluster();
-            int numUEs = l.getUEs().size();
+            int numUEs = l.getUEs().size() * q.getCluster().getClusterClosure().size();
             double powerBudget = q.getPowerBudget();
             q.clearPowerAllocation();
             for (Cluster c : q.getCluster().getClusterClosure()) {
                 for (UE i : c.getUEs()) {
                     if (c == q.getCluster()) {
                         q.setPowerAllocation(i, powerBudget / numUEs);
-                    } else {
-                        q.setPowerAllocation(i, 0.0);
                     }
                 }
             }

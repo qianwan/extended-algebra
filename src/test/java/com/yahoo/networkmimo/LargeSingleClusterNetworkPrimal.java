@@ -21,6 +21,8 @@ public class LargeSingleClusterNetworkPrimal {
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
         System.out.println("P = " + P);
+        double lambda = Q / sqrt(SNR) / I;
+        System.out.println("Lambda = " + lambda);
         cluster.generateRandomBSs(4, P, Q, 2000 / sqrt(3));
         cluster.generateRandomUEs(2, I, 2000 / sqrt(3));
 
