@@ -34,6 +34,8 @@ public class Cluster extends Entity {
 
     private final Set<Cluster> closure = Sets.newHashSet();
 
+    private String name;
+
     public final static ContinuousUniformGenerator rng = new ContinuousUniformGenerator(0, 1,
             new MersenneTwisterRNG());
 
@@ -47,6 +49,12 @@ public class Cluster extends Entity {
     public Cluster(double x, double y) {
         super(x, y);
         setType(Entity.Type.CLUSTER);
+    }
+
+    public Cluster(double x, double y, String name) {
+        super(x, y);
+        setType(Entity.Type.CLUSTER);
+        this.name = name;
     }
 
     public Cluster addBaseStation(BaseStation bs) {
@@ -113,7 +121,7 @@ public class Cluster extends Entity {
 
     @Override
     public String toString() {
-        return String.format("cluster@(%.4f,%.4f)", getXY()[0], getXY()[1]);
+        return String.format("Cluster#%s", name);
     }
 
     @Override
@@ -276,5 +284,9 @@ public class Cluster extends Entity {
                 offset += bs.getNumAntennas();
             }
         }
+    }
+
+    public String getName() {
+        return name;
     }
 }

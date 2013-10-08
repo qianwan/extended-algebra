@@ -13,7 +13,7 @@ public class DoubleClusterNetworkPrimal {
         Network network = new Network(1100);
         int Q = 5;
         int I = 10;
-        double SNRdB = 5;
+        double SNRdB = 20;
         double SNR = Math.pow(10, SNRdB / 10) / 4;
         double P = SNR / Q;
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 1000) };

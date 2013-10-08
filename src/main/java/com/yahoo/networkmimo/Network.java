@@ -11,9 +11,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexVector;
+import com.yahoo.algebra.matrix.ComplexVector.Norm;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexVector;
-import com.yahoo.algebra.matrix.ComplexVector.Norm;
 
 public class Network {
     private final static Logger logger = LoggerFactory.getLogger(Network.class);
@@ -29,6 +29,8 @@ public class Network {
     private final Map<Cluster, ComplexMatrix> mmseMMatrixMap = Maps.newHashMap();
 
     private double closureDistance;
+
+    private double sumRate;
 
     public Network(double dist) {
         closureDistance = dist;
@@ -176,7 +178,7 @@ public class Network {
             ue.updateVariables();
         }
         BaseStation.iteration++;
-        logger.debug("Sum rate is " + getSumRate());
+        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     private void generateFeasibleInitialVariables() {
@@ -208,7 +210,8 @@ public class Network {
             }
             for (Cluster c : q.getCluster().getClusterClosure()) {
                 for (UE i : c.getUEs()) {
-                    q.getSubgradients().put(i, 0.0);
+                    q.setSubgradient(i, 0.0);
+                    q.setHessianDiagonal(i, 1.0);
                 }
             }
         }
@@ -222,11 +225,45 @@ public class Network {
         for (UE ue : ues) {
             ue.updateVariables();
         }
+        updateMMatrixMap();
         BaseStation.iteration = 1;
-        logger.debug("Sum rate is " + getSumRate());
+        logger.debug("Sum rate is " + getReadySumRate());
+    }
+
+    public void refreshInitial() {
+        for (BaseStation q : bss) {
+            for (Cluster c : q.getCluster().getClusterClosure()) {
+                for (UE i : c.getUEs()) {
+                    q.setSubgradient(i, 0.0);
+                    q.setHessianDiagonal(i, 1.0);
+                }
+            }
+        }
+        for (UE ue : ues) {
+            ue.updateLambdaMap();
+        }
+        generateFeasibleInitialVariables();
+        for (UE ue : ues) {
+            ue.updateVariables();
+        }
+        updateMMatrixMap();
+        BaseStation.iteration = 1;
+        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     public double getSumRate() {
+        return sumRate;
+    }
+
+    public double updateSumRate() {
+        sumRate = 0.0;
+        for (UE ue : ues) {
+            sumRate += ue.getRate();
+        }
+        return sumRate;
+    }
+
+    public double getReadySumRate() {
         double sumRate = 0.0;
         for (UE ue : ues) {
             sumRate += ue.getRate();
@@ -235,7 +272,7 @@ public class Network {
     }
 
     public double objectiveValue() {
-        double ret = getSumRate();
+        double ret = getReadySumRate();
         for (UE ue : ues) {
             for (Cluster l : ue.getCluster().getClusterClosure()) {
                 for (BaseStation q : l.getBSs()) {
@@ -255,7 +292,7 @@ public class Network {
             objectiveValue = objectiveValue();
             logger.debug("Objective value is " + objectiveValue);
         } while (Math.abs(prev - objectiveValue) > 1e-1);
-        logger.info("Optimized sum rate is " + getSumRate());
+        logger.info("Optimized sum rate is " + getReadySumRate());
     }
 
     public void optimizeFromBSs() {
@@ -267,7 +304,7 @@ public class Network {
             objectiveValue = objectiveValue();
             logger.debug("Objective value is " + objectiveValue);
         } while (Math.abs(prev - objectiveValue) > 1e-1);
-        logger.info("Optimized sum rate is " + getSumRate());
+        logger.info("Optimized sum rate is " + getReadySumRate());
     }
 
     private void iterateWithinBSs() {
@@ -286,7 +323,7 @@ public class Network {
             ue.updateVariables();
         }
         BaseStation.iteration++;
-        logger.debug("Sum rate is " + getSumRate());
+        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     public void optimizeWMMSE() {
@@ -298,11 +335,11 @@ public class Network {
             objectiveValue = objectiveValueWMMSE();
             logger.debug("Objective value is " + objectiveValue);
         } while (Math.abs(prev - objectiveValue) > 1e-1);
-        logger.info("Optimized sum rate is " + getSumRate());
+        logger.info("Optimized sum rate is " + getReadySumRate());
     }
 
     private double objectiveValueWMMSE() {
-        return getSumRate();
+        return getReadySumRate();
     }
 
     private void iterateWMMSE() {
@@ -316,7 +353,7 @@ public class Network {
             ue.updateVariables();
         }
         BaseStation.iteration++;
-        logger.debug("Sum rate is " + getSumRate());
+        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     public void optimizeAmongBSsUEs() {
@@ -328,35 +365,92 @@ public class Network {
             objectiveValue = objectiveValue();
             logger.debug("Objective value is " + objectiveValue);
         } while (Math.abs(prev - objectiveValue) > 1e-1);
-        logger.info("Optimized sum rate is " + getSumRate());
+        logger.info("Optimized sum rate is " + getReadySumRate());
     }
 
     public void optimizePrimalProblem() {
         double prev = 0.0;
         double objectiveValue = objectiveValue();
-        while (Math.abs(prev - objectiveValue) > 1e-1) {
+        logger.debug("Objective value is " + objectiveValue);
+        while (Math.abs(prev - objectiveValue) > 1e-2) {
             for (BaseStation q : bss) {
+                logger.debug("Power allocation before optimization of " + q + ": "
+                        + q.getPowerAllocations());
+                logger.debug("Subgradients of " + q + ": " + q.getSubgradients());
                 q.optimizePowerAllocation();
+                logger.debug("Power allocation after optimization of " + q + ": "
+                        + q.getPowerAllocations());
+                // q.updateTxPreVectors();
             }
             prev = objectiveValue;
             iteratePrimalProblem();
+            BaseStation.iteration++;
             objectiveValue = objectiveValue();
-            logger.debug("Objective value is " + objectiveValue);
+            if (objectiveValue <= prev) {
+                BaseStation.iteration--;
+                break;
+            } else {
+                updateSumRate();
+                System.out.println("Objective value is " + objectiveValue);
+            }
         }
+        System.out.println("Sum rate: " + getSumRate());
+        logger.info("Sum rate: " + getSumRate());
+        System.out.println("Number of iterations: " + (BaseStation.iteration - 1));
     }
 
+    /**
+     * The stopping criteria is that capacity increment is less than 0.1
+     */
     private void iteratePrimalProblem() {
-        double prev = 0.0;
-        double objectiveValue = objectiveValue();
+        optimizeSubproblem();
+    }
+
+    /**
+     * The stopping criteria is that all subproblems satisfies the first-order
+     * optimality
+     */
+    @SuppressWarnings("unused")
+    private void iteratePrimalProblemTest() {
+        boolean subproblemsConverged = true;
+        final int maxCount = 20;
+        int count = 0;
         do {
-            prev = objectiveValue;
+            if (count++ > maxCount)
+                break;
+            subproblemsConverged = true;
             iterateSubproblem();
-            objectiveValue = objectiveValue();
-        } while (Math.abs(prev - objectiveValue) > 1e-1);
+            updateMMatrixMap();
+            for (UE ue : ues) {
+                for (Cluster l : ue.getCluster().getClusterClosure()) {
+                    for (BaseStation q : l.getBSs()) {
+                        subproblemsConverged &= ue.checkSubproblemConverged(q);
+                    }
+                }
+            }
+        } while (!subproblemsConverged);
+    }
+
+    private void optimizeSubproblem() {
+        boolean subproblemsConverged = true;
+        final int maxCount = 20;
+        int count = 0;
+        do {
+            if (count++ > maxCount)
+                break;
+            subproblemsConverged = true;
+            iterateSubproblem();
+            for (UE ue : ues) {
+                for (Cluster l : ue.getCluster().getClusterClosure()) {
+                    for (BaseStation q : l.getBSs()) {
+                        subproblemsConverged &= ue.checkSubproblemConverged(q);
+                    }
+                }
+            }
+        } while (!subproblemsConverged);
     }
 
     private void iterateSubproblem() {
-        updateMMatrixMap();
         for (UE ue : ues) {
             for (Cluster l : ue.getCluster().getClusterClosure()) {
                 for (BaseStation q : l.getBSs()) {
@@ -366,6 +460,10 @@ public class Network {
         }
         for (UE ue : ues) {
             ue.updateVariables();
+        }
+        updateMMatrixMap();
+        for (UE ue : ues) {
+            ue.updateCVectorMap();
         }
     }
 
@@ -404,7 +502,7 @@ public class Network {
             ue.updateVariables();
         }
         BaseStation.iteration++;
-        logger.debug("Sum rate is " + getSumRate());
+        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     @Override

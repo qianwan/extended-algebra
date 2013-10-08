@@ -17,6 +17,7 @@ public class QuadrupleClusterNetworkWMMSE {
         double SNRdB = 20;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
+        System.out.println("P = " + P);
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0), new Cluster(0, 2000),
                 new Cluster(2000 * Math.cos(Math.PI / 6), 2000 * Math.sin(Math.PI / 6)),
                 new Cluster(-2000 * Math.cos(Math.PI / 6), 2000 * Math.sin(Math.PI / 6)) };

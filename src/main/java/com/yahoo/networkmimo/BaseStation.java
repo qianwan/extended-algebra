@@ -1,6 +1,8 @@
 package com.yahoo.networkmimo;
 
 import static com.yahoo.networkmimo.UE.bisectionTarget;
+import static java.lang.Math.sqrt;
+import static java.lang.Math.pow;
 
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,11 @@ public class BaseStation extends Entity {
 
     private Map<UE, Double> subgradients = Maps.newHashMap();
 
+    private Map<UE, Double> hessianDiagonals = Maps.newHashMap();
+
     private String name = null;
+
+    private Map<UE, ComplexVector> quasiTxVectors = Maps.newHashMap();
 
     public static int iteration = 1;
 
@@ -174,7 +180,7 @@ public class BaseStation extends Entity {
 
     @Override
     public String toString() {
-        return String.format("BS#%s", name, getXY()[0], getXY()[1]);
+        return String.format("BS#%s@%s", name, cluster == null ? null : cluster.getName());
     }
 
     @Override
@@ -200,11 +206,29 @@ public class BaseStation extends Entity {
             ueList[index++] = ue;
         }
         double[] direction = new double[ueList.length];
-        for (int i = 0; i < direction.length; i++) {
-            direction[i] = powerAllocation.get(ueList[i]) - subgradients.get(ueList[i]);
+        double origPower = 0.0;
+        double dirPower = 0.0;
+        double relaxH = 0.0;
+        double gnorm = 0.0;
+        for (int i = 0; i < ueList.length; i++) {
+            gnorm += pow(subgradients.get(ueList[i]), 2);
         }
+        gnorm = sqrt(gnorm);
+        for (int i = 0; i < direction.length; i++) {
+            double subgradient = subgradients.get(ueList[i]);
+            double alloc = powerAllocation.get(ueList[i]);
+            double hessian = hessianDiagonals.get(ueList[i]);
+            hessian = 1 / alloc;
+            if (gnorm == 0)
+                gnorm = 1;
+            direction[i] = alloc - subgradient / hessian / 23;
+            if (direction[i] > relaxH)
+                relaxH = direction[i];
+            dirPower += direction[i];
+            origPower += powerAllocation.get(ueList[i]);
+        }
+        logger.debug("orig power " + origPower + ", dir power " + dirPower);
         double relaxL = 0.0;
-        double relaxH = 10000;
         double totalPower = 0.0;
         double relax = 0.0;
         double[] projection = new double[ueList.length];
@@ -212,19 +236,22 @@ public class BaseStation extends Entity {
             relax = (relaxL + relaxH) / 2;
             totalPower = 0.0;
             for (int i = 0; i < projection.length; i++) {
-                projection[i] = (direction[i] <= relax) ? 0 : direction[i] - relax;
+                projection[i] = (direction[i] - relax <= UE.epsilon) ? UE.epsilon : direction[i]
+                        - relax;
                 totalPower += projection[i];
             }
             if (totalPower > powerBudget)
                 relaxL = relax;
-            else
+            else if (totalPower < powerBudget)
                 relaxH = relax;
-        } while (Math.abs(totalPower - powerBudget) > 1e-3);
+            else
+                break;
+        } while (Math.abs(totalPower - powerBudget) / powerBudget > 1e-6);
 
         logger.debug("Power relax is " + relax);
         for (int i = 0; i < ueList.length; i++) {
             double orig = powerAllocation.get(ueList[i]);
-            powerAllocation.put(ueList[i], orig + 1.0 / iteration * (projection[i] - orig));
+            powerAllocation.put(ueList[i], orig + 1.0 / sqrt(1) * (projection[i] - orig));
         }
     }
 
@@ -240,17 +267,26 @@ public class BaseStation extends Entity {
     }
 
     public void updateTxPreVectors() {
-        for (Cluster l : cluster.getClusterClosure()) {
-            for (UE ue : l.getUEs()) {
-                if (getPowerAllocation(ue) > 0) {
-                    if (getTxPreVector(ue).norm(Norm.Two) <= Double.MIN_VALUE) {
-                        logger.warn("Allocate power to unserved UE " + ue + " from " + this);
-                    } else {
-                        ComplexVectors.setPower(getTxPreVector(ue), getPowerAllocation(ue));
-                    }
-                }
+        // for (Cluster l : cluster.getClusterClosure()) {
+        // for (UE ue : l.getUEs()) {
+        // if (getPowerAllocation(ue) > 0) {
+        // if (getTxPreVector(ue).norm(Norm.Two) <= Double.MIN_VALUE) {
+        // logger.warn("Allocate power to unserved UE " + ue + " from " + this);
+        // } else {
+        // ComplexVectors.setPower(getTxPreVector(ue), getPowerAllocation(ue));
+        // }
+        // }
+        // }
+        // }
+        for (Map.Entry<UE, ComplexVector> entry : quasiTxVectors.entrySet()) {
+            UE ue = entry.getKey();
+            ComplexVector v = entry.getValue();
+            if (v.norm(Norm.Two) > 0.0) {
+                ComplexVectors.setPower(v, powerAllocation.get(ue));
+                txPreVectors.put(ue, v);
             }
         }
+        quasiTxVectors.clear();
     }
 
     public double blockCoordinateDescent(UE ue) {
@@ -330,5 +366,25 @@ public class BaseStation extends Entity {
 
     public double getSubgradient(UE ue) {
         return subgradients.get(ue);
+    }
+
+    public void setQuasiTxVector(UE ue, ComplexVector v) {
+        quasiTxVectors.put(ue, v);
+    }
+
+    public ComplexVector getQuasiTxVector(UE ue) {
+        return quasiTxVectors.get(ue);
+    }
+
+    public void setHessianDiagonal(UE ue, double d) {
+        hessianDiagonals.put(ue, d);
+    }
+
+    public double getHessianDiagonal(UE ue) {
+        return hessianDiagonals.get(ue);
+    }
+
+    public Map<UE, ComplexVector> getTxPreVectors() {
+        return txPreVectors;
     }
 }

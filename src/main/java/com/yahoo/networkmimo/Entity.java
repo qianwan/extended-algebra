@@ -94,8 +94,7 @@ public abstract class Entity implements MIMOChannel {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
         }
         mimoChannels.put(e, H);
-//        logger.debug("Generate MIMO channel coefficient between " + this + " and " + e.toString()
-//                + "\n" + H);
+        logger.debug("MIMO channel coefficient between " + this + " and " + e.toString() + ": " + H);
         return H;
     }
 

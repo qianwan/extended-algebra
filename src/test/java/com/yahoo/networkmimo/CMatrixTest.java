@@ -4,7 +4,7 @@ import static java.lang.Math.sqrt;
 
 import java.util.Iterator;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.yahoo.algebra.matrix.ComplexMatrix;
@@ -26,7 +26,7 @@ public class CMatrixTest {
         UE ue = iter.next();
         ComplexMatrix c1 = ue.calculateCMatrix1();
         ComplexMatrix c2 = ue.calculateCMatrix2();
-        ComplexMatrix diff = c1.add(new double[]{-1, 0}, c2);
+        ComplexMatrix diff = c1.add(new double[] { -1, 0 }, c2);
         Assert.assertTrue(diff.norm(Norm.One) < 1e-6);
     }
 }

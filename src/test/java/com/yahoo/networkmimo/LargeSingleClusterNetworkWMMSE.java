@@ -20,7 +20,7 @@ public class LargeSingleClusterNetworkWMMSE {
         Cluster cluster = new Cluster(0, 0);
         int Q = 20;
         int I = 40;
-        double SNRdB = 20;
+        double SNRdB = 0;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
         System.out.println("P = " + P);

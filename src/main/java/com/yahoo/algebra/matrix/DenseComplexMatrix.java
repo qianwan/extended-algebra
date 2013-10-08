@@ -221,4 +221,17 @@ public class DenseComplexMatrix extends AbstractDenseComplexMatrix {
         hermitianTranspose(B);
         return B;
     }
+
+    @Override
+    public void set(String str) {
+        String[] rows = str.split(";");
+        if (rows.length != numRows)
+            throw new IllegalArgumentException("rows != " + numRows);
+        for (int i = 0; i < numRows; i++) {
+            String[] cols = rows[i].split(",");
+            for (int j = 0; j < numColumns; j++) {
+                this.set(i, j, Complexes.read(cols[j]));
+            }
+        }
+    }
 }

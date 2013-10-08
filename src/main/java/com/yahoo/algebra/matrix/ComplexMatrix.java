@@ -28,6 +28,12 @@ public interface ComplexMatrix extends Iterable<ComplexMatrixEntry> {
     void set(int row, int column, double value[]);
 
     /**
+     * Read from string
+     * @param str
+     */
+    void set(String str);
+
+    /**
      * <code>A(row,column) += value</code>
      */
     void add(int row, int column, double value[]);
