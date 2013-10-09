@@ -13,6 +13,7 @@ public class DoubleClusterNetworkPrimal {
     @Test
     public void testIt() {
         Network network = new Network(2100);
+        int K = 2;
         int Q = 20;
         int I = 40;
         double SNRdB = 0;
@@ -46,7 +47,7 @@ public class DoubleClusterNetworkPrimal {
                 }
                 numServingBSs += servingBSs.size();
             }
-            System.out.println("Avg number of serving BSs " + (numServingBSs / I));
+            System.out.println("Avg number of serving BSs " + (numServingBSs / I / K));
         }
         System.out.println("Avg sum rate is " + total / numCases);
     }

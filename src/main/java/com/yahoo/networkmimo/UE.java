@@ -728,6 +728,15 @@ public class UE extends Entity {
         // double rxPower = H.mult(
         // H.hermitianTranspose(new DenseComplexMatrix(H.numColumns(),
         // H.numRows()))).trace()[0];
+        /**
+         *  0dB, 0.5
+         *  5dB, 0.28117066259517454
+         * 10dB, 0.15811388300841894
+         * 15dB, 0.08891397050194613
+         * 20dB, 0.05
+         * 25dB, 0.028117066259517452
+         * 30dB, 0.015811388300841896
+         */
         double lambda = 0.5;
         lambdaMap.put(q, lambda);
         // lambdaMap.put(q, 0.2);

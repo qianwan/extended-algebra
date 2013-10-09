@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import static java.lang.Math.sqrt;
+
 import java.util.Map;
 
 import org.junit.Assert;
@@ -8,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexMatrixEntry;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
@@ -88,7 +90,7 @@ public abstract class Entity implements MIMOChannel {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double distance = Utils.getEntityDistance(this, e);
-        double sigma = getChannelGain(distance, "S-WMMSE");
+        double sigma = getChannelGain(distance, "WMMSE");
 
         for (ComplexMatrixEntry entry : H) {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
@@ -107,9 +109,9 @@ public abstract class Entity implements MIMOChannel {
             double L = Math.pow(10, rng.nextValue() * 8 / 10.0);
             double sigma2 = Math.pow(200.0 / distance, 3) * L;
             return Math.sqrt(sigma2);
-        } else {
-            logger.error("No such channel gain mode");
-            return 0.0;
+        } else if (mode.equalsIgnoreCase("WMMSE")) {
+            return 1 / sqrt(2);
         }
+        return 0.0;
     }
 }

@@ -15,27 +15,31 @@ public class LargeSingleClusterNetworkPrimal {
         Network network = new Network(2100);
         Cluster cluster = new Cluster(0, 0, "1");
         network.addCluster(cluster);
+        int K = 1;
         int Q = 20;
         int I = 40;
-        double SNRdB = 0;
+        double SNRdB = 5;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
         System.out.println("P = " + P);
-        double lambda = Q / sqrt(SNR) / I;
+        double lambda = Q / sqrt(SNR) / I / K;
         System.out.println("Lambda = " + lambda);
         cluster.generateRandomBSs(4, P, Q, 2000 / sqrt(3));
         cluster.generateRandomUEs(2, I, 2000 / sqrt(3));
 
-        double total = 0.0;
+        double totalSumRate = 0.0;
+        double totalIterations = 0.0;
+        double totalServingBSs = 0.0;
         double numServingBSs = 0.0;
-        int numCases = 10;
+        double numCases = 10;
         network.refresh();
         for (int i = 0; i < numCases; i++) {
             network.refresh();
             network.optimizePrimalProblem();
             network.brownianMotion(2000 / sqrt(3));
             System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
-            total += network.getSumRate();
+            totalSumRate += network.getSumRate();
+            totalIterations += (BaseStation.iteration - 1);
             numServingBSs = 0.0;
             for (UE ue : network.getUEs()) {
                 List<BaseStation> servingBSs = Lists.newArrayList();
@@ -46,8 +50,11 @@ public class LargeSingleClusterNetworkPrimal {
                 }
                 numServingBSs += servingBSs.size();
             }
-            System.out.println("Avg number of serving BSs " + (numServingBSs / I));
+            totalServingBSs += numServingBSs;
+            System.out.println("Avg number of serving BSs " + (numServingBSs / I / K));
         }
-        System.out.println("Avg sum rate is " + total / numCases);
+        System.out.println("Avg sum rate: " + totalSumRate / numCases);
+        System.out.println("Avg iterations: " + totalIterations / numCases);
+        System.out.println("Avg serving BSs: " + totalServingBSs / I / K / numCases);
     }
 }

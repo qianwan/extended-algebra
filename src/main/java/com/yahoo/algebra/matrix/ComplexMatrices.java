@@ -147,6 +147,13 @@ public final class ComplexMatrices {
         return rho;
     }
 
+    /**
+     * <code>A=V*Lambda*V<sup>H</sup></code>
+     * @param A target matrix
+     * @param V eigen vectors
+     * @param lambda eigenvalues
+     * @throws NotConvergedException
+     */
     public static void eig(ComplexMatrix A, ComplexMatrix V, ComplexVector lambda)
             throws NotConvergedException {
         if (!A.isSquare()) {

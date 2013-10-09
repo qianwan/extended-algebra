@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import static java.lang.Math.abs;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -136,7 +138,7 @@ public class Network {
             M.zero();
             for (Cluster l : clusters) {
                 for (UE i : l.getUEs()) {
-                    ComplexMatrix H = l.getMIMOChannel(i);
+                    ComplexMatrix H = cluster.getMIMOChannel(i);
                     ComplexVector Hu = H.hermitianTranspose(
                             new DenseComplexMatrix(H.numColumns(), H.numRows())).mult(
                             i.getRxPreVector(), new DenseComplexVector(H.numColumns()));
@@ -189,9 +191,7 @@ public class Network {
             q.clearPowerAllocation();
             for (Cluster c : q.getCluster().getClusterClosure()) {
                 for (UE i : c.getUEs()) {
-                    if (c == q.getCluster()) {
-                        q.setPowerAllocation(i, powerBudget / numUEs);
-                    }
+                    q.setPowerAllocation(i, powerBudget / numUEs);
                 }
             }
             logger.debug("Initial average power allocation within the located cluster from " + q
@@ -327,13 +327,21 @@ public class Network {
     public void optimizeWMMSE() {
         double prev = 0.0;
         double objectiveValue = objectiveValueWMMSE();
-        do {
+        while (abs(prev - objectiveValue) > 1e-3) {
             prev = objectiveValue;
             iterateWMMSE();
             objectiveValue = objectiveValueWMMSE();
-            logger.debug("Objective value is " + objectiveValue);
-        } while (Math.abs(prev - objectiveValue) > 1e-1);
-        logger.info("Optimized sum rate is " + getReadySumRate());
+            if (objectiveValue <= prev) {
+                BaseStation.iteration--;
+                break;
+            } else {
+                updateSumRate();
+                System.out.println("Objective value is " + objectiveValue);
+            }
+        }
+        System.out.println("Sum rate: " + getSumRate());
+        logger.info("Sum rate: " + getSumRate());
+        System.out.println("Number of iterations: " + (BaseStation.iteration - 1));
     }
 
     private double objectiveValueWMMSE() {
@@ -351,7 +359,6 @@ public class Network {
             ue.updateVariables();
         }
         BaseStation.iteration++;
-        logger.debug("Sum rate is " + getReadySumRate());
     }
 
     public void optimizeAmongBSsUEs() {

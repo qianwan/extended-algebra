@@ -1,5 +1,7 @@
 package com.yahoo.networkmimo;
 
+import static java.lang.Math.pow;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -272,7 +274,7 @@ public class Cluster extends Entity {
     public static double bisectionTarget(ComplexMatrix phi, ComplexVector lambda, double miu) {
         double ret = 0.0;
         for (int i = 0; i < phi.numRows(); i++) {
-            ret += phi.get(i, i)[0] / Math.pow(lambda.get(i)[0] + miu, 2);
+            ret += phi.get(i, i)[0] / pow(lambda.get(i)[0] + miu, 2);
         }
         return ret;
     }
