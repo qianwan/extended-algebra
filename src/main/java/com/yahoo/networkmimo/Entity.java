@@ -90,7 +90,7 @@ public abstract class Entity implements MIMOChannel {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double distance = Utils.getEntityDistance(this, e);
-        double sigma = getChannelGain(distance, "S-WMMSE");
+        double sigma = getChannelGain(distance, "IWMMSE");
 
         for (ComplexMatrixEntry entry : H) {
             entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
@@ -109,7 +109,7 @@ public abstract class Entity implements MIMOChannel {
             double L = Math.pow(10, rng.nextValue() * 8 / 10.0);
             double sigma2 = Math.pow(200.0 / distance, 3) * L;
             return Math.sqrt(sigma2);
-        } else if (mode.equalsIgnoreCase("WMMSE")) {
+        } else if (mode.equalsIgnoreCase("IWMMSE")) {
             return 1 / sqrt(2);
         }
         return 0.0;

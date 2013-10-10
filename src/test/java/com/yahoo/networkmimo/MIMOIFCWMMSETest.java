@@ -8,12 +8,12 @@ public class MIMOIFCWMMSETest {
     /**
      * K = 3, T = R = 2
      */
-    // @Test
+    @Test
     public void testIt() {
         Network network = new Network(1000);
         int Q = 1;
         int I = 1;
-        double SNRdB = 25;
+        double SNRdB = 20;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR;
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0, "1"), new Cluster(0, 2000, "2"),
@@ -26,7 +26,7 @@ public class MIMOIFCWMMSETest {
 
         double totalSumRate = 0.0;
         double totalIterations = 0.0;
-        int numCases = 100;
+        int numCases = 1000;
         for (int i = 0; i < numCases; i++) {
             network.refresh();
             network.optimizeWMMSE();
@@ -41,12 +41,12 @@ public class MIMOIFCWMMSETest {
     /**
      * K = 10, T = 3, R = 2
      */
-    @Test
+    //@Test
     public void testIt2() {
         Network network = new Network(1000);
         int Q = 1;
         int I = 1;
-        double SNRdB = 25;
+        double SNRdB = 30;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR;
         Cluster[] clusters = new Cluster[] { new Cluster(0, 0, "1"), new Cluster(0, 2000, "2"),

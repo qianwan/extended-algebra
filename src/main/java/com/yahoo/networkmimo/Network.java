@@ -330,7 +330,7 @@ public class Network {
     public void optimizeWMMSE() {
         double prev = 0.0;
         double objectiveValue = objectiveValueWMMSE();
-        while (abs(prev - objectiveValue) > 1e-1) {
+        while (abs(prev - objectiveValue) > 1e-2) {
             prev = objectiveValue;
             iterateWMMSE();
             objectiveValue = objectiveValueWMMSE();

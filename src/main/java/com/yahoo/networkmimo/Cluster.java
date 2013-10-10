@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import com.yahoo.algebra.matrix.ComplexMatrices;
 import com.yahoo.algebra.matrix.ComplexMatrix;
 import com.yahoo.algebra.matrix.ComplexVector;
+import com.yahoo.algebra.matrix.ComplexVectors;
 import com.yahoo.algebra.matrix.DenseComplexMatrix;
 import com.yahoo.algebra.matrix.DenseComplexVector;
 import com.yahoo.networkmimo.exception.ClusterNotReadyException;
@@ -35,6 +36,8 @@ public class Cluster extends Entity {
     private final Set<UE> ues = Sets.newHashSet();
 
     private final Set<Cluster> closure = Sets.newHashSet();
+
+    private double powerBudget = 0.0;
 
     private String name;
 
@@ -67,6 +70,7 @@ public class Cluster extends Entity {
             network.addBaseStation(bs);
         }
         setNumAntennas(getNumAntennas() + bs.getNumAntennas());
+        powerBudget += bs.getPowerBudget();
         logger.debug("Add " + bs + " to " + this + " in " + network);
         return this;
     }
@@ -234,6 +238,20 @@ public class Cluster extends Entity {
     }
 
     public double searchMultiplier() {
+        double power = 0.0;
+        for (UE ue : ues) {
+            ComplexMatrix H = getMIMOChannel(ue);
+            ComplexVector v = network
+                    .getMmseMMatrix(this)
+                    .inverse()
+                    .mult(H.hermitianTranspose(new DenseComplexMatrix(H.numColumns(), H.numRows())))
+                    .mult(ue.getRxPreVector(), new DenseComplexVector(getNumAntennas()))
+                    .scale(new double[] { ue.getMMSEWeight(), 0 });
+            power += ComplexVectors.getPower(v);
+        }
+        if (power <= powerBudget)
+            return 0;
+
         ComplexMatrix M = network.getMmseMMatrix(this);
         ComplexMatrix D = new DenseComplexMatrix(M.numRows(), M.numColumns());
         ComplexVector lambda = new DenseComplexVector(M.numRows());
@@ -257,9 +275,6 @@ public class Cluster extends Entity {
         ComplexMatrix phi = D
                 .hermitianTranspose(new DenseComplexMatrix(D.numColumns(), D.numRows())).mult(tmp)
                 .mult(D);
-        double powerBudget = 0.0;
-        for (BaseStation bs : bss)
-            powerBudget += bs.getPowerBudget();
         double miuLow = 0.0;
         double miuHigh = 1.0;
         double multiplier = 0.0;
@@ -310,5 +325,9 @@ public class Cluster extends Entity {
 
     public String getName() {
         return name;
+    }
+
+    public double getPowerBudget() {
+        return powerBudget;
     }
 }
