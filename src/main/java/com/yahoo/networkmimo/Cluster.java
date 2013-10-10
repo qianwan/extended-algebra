@@ -145,10 +145,14 @@ public class Cluster extends Entity {
 
     /**
      * 
-     * @param numAntennas number of antennas
-     * @param power power budget
-     * @param num number of base stations
-     * @param r outer radius
+     * @param numAntennas
+     *            number of antennas
+     * @param power
+     *            power budget
+     * @param num
+     *            number of base stations
+     * @param r
+     *            outer radius
      */
     public void generateRandomBSs(int numAntennas, double power, int num, double r) {
         for (int i = 0; i < num; i++) {
@@ -174,9 +178,12 @@ public class Cluster extends Entity {
 
     /**
      * 
-     * @param numAntennas number of antennas
-     * @param num number of user equipment
-     * @param r outer radius
+     * @param numAntennas
+     *            number of antennas
+     * @param num
+     *            number of user equipment
+     * @param r
+     *            outer radius
      */
     public void generateRandomUEs(int numAntennas, int num, double r) {
         for (int i = 0; i < num; i++) {
@@ -267,7 +274,7 @@ public class Cluster extends Entity {
                 miuLow = multiplier;
             else if (targetValue < powerBudget)
                 miuHigh = multiplier;
-        } while (Math.abs(miuLow - miuHigh) > 1e-3);
+        } while (Math.abs((miuLow - miuHigh) / miuHigh) > 1e-3);
         return multiplier;
     }
 

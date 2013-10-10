@@ -185,11 +185,14 @@ public class Network {
 
     private void generateFeasibleInitialVariables() {
         for (BaseStation q : bss) {
-            Cluster l = q.getCluster();
-            int numUEs = l.getUEs().size() * q.getCluster().getClusterClosure().size();
+            int numUEs = 0;
+            Set<Cluster> clusterClosure = q.getCluster().getClusterClosure();
+            for (Cluster c : clusterClosure) {
+                numUEs += c.getUEs().size();
+            }
             double powerBudget = q.getPowerBudget();
             q.clearPowerAllocation();
-            for (Cluster c : q.getCluster().getClusterClosure()) {
+            for (Cluster c : clusterClosure) {
                 for (UE i : c.getUEs()) {
                     q.setPowerAllocation(i, powerBudget / numUEs);
                 }
@@ -327,7 +330,7 @@ public class Network {
     public void optimizeWMMSE() {
         double prev = 0.0;
         double objectiveValue = objectiveValueWMMSE();
-        while (abs(prev - objectiveValue) > 1e-3) {
+        while (abs(prev - objectiveValue) > 1e-1) {
             prev = objectiveValue;
             iterateWMMSE();
             objectiveValue = objectiveValueWMMSE();
