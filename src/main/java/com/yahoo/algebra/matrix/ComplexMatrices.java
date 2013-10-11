@@ -149,15 +149,24 @@ public final class ComplexMatrices {
 
     /**
      * <code>A=V*Lambda*V<sup>H</sup></code>
-     * @param A target matrix
-     * @param V eigen vectors
-     * @param lambda eigenvalues
+     * 
+     * @param A
+     *            target matrix
+     * @param V
+     *            eigen vectors
+     * @param lambda
+     *            eigenvalues
      * @throws NotConvergedException
      */
     public static void eig(ComplexMatrix A, ComplexMatrix V, ComplexVector lambda)
             throws NotConvergedException {
         if (!A.isSquare()) {
             throw new ComplexMatrixNotSPDException("eigenvalue decomposition is for squre matrix");
+        }
+        if (A.numColumns()==1 && A.numRows()==1) {
+            V.set(0, 0, new double[]{1, 0});
+            lambda.set(0, A.get(0, 0));
+            return;
         }
         double[] data = new double[A.numRows() * A.numColumns() * 2];
         for (int i = 0; i < A.numRows(); i++) {
@@ -172,7 +181,7 @@ public final class ComplexMatrices {
         double[] vr = new double[data.length];
         double[] work = new double[data.length];
         int row = A.numRows();
-        int info = NativeBlas.zgeev('V', 'V', row, data, 0, row, w, 0, vl, 0, row, vr, 0, row,
+        int info = NativeBlas.zgeev('N', 'V', row, data, 0, row, w, 0, vl, 0, row, vr, 0, row,
                 work, 0);
         if (info > 0)
             throw new ComplexMatrixNotSPDException("Eigenvalues have not converged.");

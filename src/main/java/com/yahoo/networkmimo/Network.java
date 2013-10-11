@@ -34,6 +34,10 @@ public class Network {
 
     private double sumRate;
 
+    public static double epsilon = 1e-2;
+
+    public static int maxNumIterations = 100;
+
     public Network(double dist) {
         closureDistance = dist;
     }
@@ -227,7 +231,29 @@ public class Network {
             ue.updateVariables();
         }
         updateMMatrixMap();
-        BaseStation.iteration = 1;
+        BaseStation.iteration = 0;
+        logger.debug("Sum rate is " + getReadySumRate());
+    }
+
+    public void refreshWMMSE() {
+        logger.debug("Network refresh");
+        for (BaseStation q : bss) {
+            for (UE i : ues) {
+                q.genenerateMIMOChannel(i);
+            }
+        }
+        for (Cluster cluster : clusters) {
+            cluster.assembleMIMOChannel();
+        }
+        generateFeasibleInitialVariables();
+        for (Cluster cluster : clusters) {
+            cluster.assembleTxVectors();
+        }
+        for (UE ue : ues) {
+            ue.updateWMMSEVariables();
+        }
+        updateSumRate();
+        BaseStation.iteration = 0;
         logger.debug("Sum rate is " + getReadySumRate());
     }
 
@@ -330,25 +356,28 @@ public class Network {
     public void optimizeWMMSE() {
         double prev = 0.0;
         double objectiveValue = objectiveValueWMMSE();
-        while (abs(prev - objectiveValue) > 1e-2) {
+
+        while (abs(prev - objectiveValue) > epsilon) {
+            BaseStation.iteration++;
+            if (BaseStation.iteration > maxNumIterations) {
+                BaseStation.iteration--;
+                break;
+            }
             prev = objectiveValue;
             iterateWMMSE();
             objectiveValue = objectiveValueWMMSE();
-            if (objectiveValue <= prev) {
-                BaseStation.iteration--;
-                break;
-            } else {
-                updateSumRate();
-                System.out.println("Objective value is " + objectiveValue);
-            }
+            updateSumRate();
+            System.out.println("Sum rate: " + getSumRate());
         }
-        System.out.println("Sum rate: " + getSumRate());
         logger.info("Sum rate: " + getSumRate());
-        System.out.println("Number of iterations: " + (BaseStation.iteration - 1));
     }
 
     private double objectiveValueWMMSE() {
-        return getReadySumRate();
+        double sum = 0.0;
+        for (UE ue : ues) {
+            sum += ue.getRate();
+        }
+        return sum;
     }
 
     private void iterateWMMSE() {
@@ -359,9 +388,8 @@ public class Network {
         }
 
         for (UE ue : ues) {
-            ue.updateVariables();
+            ue.updateWMMSEVariables();
         }
-        BaseStation.iteration++;
     }
 
     public void optimizeAmongBSsUEs() {

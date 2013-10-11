@@ -249,8 +249,9 @@ public class Cluster extends Entity {
                     .scale(new double[] { ue.getMMSEWeight(), 0 });
             power += ComplexVectors.getPower(v);
         }
-        if (power <= powerBudget)
+        if (power <= powerBudget) {
             return 0;
+        }
 
         ComplexMatrix M = network.getMmseMMatrix(this);
         ComplexMatrix D = new DenseComplexMatrix(M.numRows(), M.numColumns());
@@ -272,9 +273,7 @@ public class Cluster extends Entity {
                     new DenseComplexMatrix(Hu.size(), Hu.size()));
             tmp.add(HuuH.scale(new double[] { ue.getMMSEWeight() * ue.getMMSEWeight(), 0 }));
         }
-        ComplexMatrix phi = D
-                .hermitianTranspose(new DenseComplexMatrix(D.numColumns(), D.numRows())).mult(tmp)
-                .mult(D);
+        ComplexMatrix phi = D.inverse().mult(tmp).mult(D);
         double miuLow = 0.0;
         double miuHigh = 1.0;
         double multiplier = 0.0;
@@ -289,7 +288,7 @@ public class Cluster extends Entity {
                 miuLow = multiplier;
             else if (targetValue < powerBudget)
                 miuHigh = multiplier;
-        } while (Math.abs((miuLow - miuHigh) / miuHigh) > 1e-3);
+        } while (Math.abs((targetValue - powerBudget) / powerBudget) > 1e-6);
         return multiplier;
     }
 
@@ -329,5 +328,20 @@ public class Cluster extends Entity {
 
     public double getPowerBudget() {
         return powerBudget;
+    }
+
+    public void assembleTxVectors() {
+        for (UE ue : network.getUEs()) {
+            ComplexVector V = new DenseComplexVector(getNumAntennas());
+            int offset = 0;
+            for (BaseStation bs : bsList) {
+                ComplexVector v = bs.getTxPreVector(ue);
+                for (int i = 0; i < v.size(); i++) {
+                    V.set(i + offset, v.get(i));
+                }
+                offset += v.size();
+            }
+            txPreVectors.put(ue, V);
+        }
     }
 }

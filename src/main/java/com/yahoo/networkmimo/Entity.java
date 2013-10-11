@@ -34,6 +34,8 @@ public abstract class Entity implements MIMOChannel {
 
     protected final Map<Entity, ComplexMatrix> mimoChannels = Maps.newHashMap();
 
+    public static String csiMode = "IWMMSE";
+
     public enum Type {
         BS, CLUSTER, UE, UNKNOWN
     };
@@ -90,10 +92,11 @@ public abstract class Entity implements MIMOChannel {
         Assert.assertFalse(e.getType() == this.getType());
         DenseComplexMatrix H = new DenseComplexMatrix(e.getNumAntennas(), this.getNumAntennas());
         double distance = Utils.getEntityDistance(this, e);
-        double sigma = getChannelGain(distance, "IWMMSE");
+        double sigma = getChannelGain(distance, csiMode);
+        double sigma2 = getChannelGain(distance, csiMode);
 
         for (ComplexMatrixEntry entry : H) {
-            entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma });
+            entry.set(new double[] { rng.nextValue() * sigma, rng.nextValue() * sigma2 });
         }
         mimoChannels.put(e, H);
         logger.debug("MIMO channel coefficient between " + this + " and " + e.toString() + ": " + H);

@@ -15,5 +15,8 @@ public class DenseComplexMatrixDetTest {
         double sqrDet = B.det2();
         double expected = 17.097518764440533;
         Assert.assertEquals(expected, sqrDet, 1e-10);
+
+        DenseComplexMatrix A = new DenseComplexMatrix(1, 1);
+        A.set(0, 0, new double[]{3, 4});
     }
 }

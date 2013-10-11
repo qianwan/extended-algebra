@@ -22,9 +22,16 @@ public class EigenTest {
         A = v.mult(v.conjugate(new DenseComplexVector(v.size())), new DenseComplexMatrix(v.size(),
                 v.size()));
         ComplexMatrices.eig(A, V, lambda);
-        ComplexMatrix diff = V.mult(ComplexMatrices.diag(lambda))
-                .mult(V.hermitianTranspose(new DenseComplexMatrix(V.numColumns(), V.numRows())))
+        ComplexMatrix diff = V.mult(ComplexMatrices.diag(lambda)).mult(V.inverse())
                 .add(new double[] { -1, 0 }, A);
         Assert.assertTrue(diff.norm(Norm.One) < 1e-10);
+        System.out.println(A);
+        System.out.println(V.mult(ComplexMatrices.diag(lambda)).mult(
+                V.hermitianTranspose(new DenseComplexMatrix(V.numColumns(), V.numRows()))));
+        System.out.println(V.mult(ComplexMatrices.diag(lambda)).mult(V.inverse()));
+        System.out
+                .println(V.hermitianTranspose(new DenseComplexMatrix(V.numColumns(), V.numRows())));
+        System.out.println(V.inverse());
+        System.out.println(V);
     }
 }

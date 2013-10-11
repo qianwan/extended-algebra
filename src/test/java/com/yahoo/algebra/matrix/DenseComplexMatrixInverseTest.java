@@ -26,5 +26,9 @@ public class DenseComplexMatrixInverseTest {
 
         Assert.assertTrue(A.mult(B, new DenseComplexMatrix(A.numRows(), A.numRows())).equals(I));
         Assert.assertTrue(B.mult(A, new DenseComplexMatrix(A.numRows(), A.numRows())).equals(I));
+
+        B = new DenseComplexMatrix(1, 1);
+        B.set(0, 0, new double[]{2, 3});
+        System.out.println(B.inverse());
     }
 }

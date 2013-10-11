@@ -18,7 +18,7 @@ public class LargeSingleClusterNetworkPrimal {
         int K = 1;
         int Q = 20;
         int I = 40;
-        double SNRdB = 5;
+        double SNRdB = 1;
         double SNR = Math.pow(10, SNRdB / 10);
         double P = SNR / Q;
         System.out.println("P = " + P);

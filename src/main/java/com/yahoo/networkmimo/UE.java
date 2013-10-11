@@ -548,6 +548,35 @@ public class UE extends Entity {
     // return ret;
     // }
 
+    public void updateWMMSEVariables() {
+        ComplexMatrix C = new DenseComplexMatrix(getNumAntennas(), getNumAntennas());
+        C.zero();
+
+        for (Cluster k : network.getClusters()) {
+            for (UE ue : k.getUEs()) {
+                ComplexMatrix H = k.getMIMOChannel(this);
+                ComplexVector V = k.getTxPreVector(ue);
+                ComplexVector Hv = H.mult(V, new DenseComplexVector(H.numRows()));
+                ComplexMatrix HVVH = Hv.mult(Hv.conjugate(new DenseComplexVector(Hv.size())),
+                        new DenseComplexMatrix(Hv.size(), Hv.size()));
+                C.add(HVVH);
+            }
+        }
+        C.add(new double[] { N0, 0 }, ComplexMatrices.eye(C.numRows()));
+
+        ComplexVector localHV = cluster.getMIMOChannel(this).mult(cluster.getTxPreVector(this),
+                new DenseComplexVector(getNumAntennas()));
+        rxPreVector = C.inverse().mult(localHV, new DenseComplexVector(C.numRows()));
+        mmseWeight = 1.0 / (1 - rxPreVector.dot(localHV)[0]);
+
+        ComplexMatrix localHVVH = localHV.mult(localHV.conjugate(new DenseComplexVector(localHV
+                .size())), new DenseComplexMatrix(localHV.size(), localHV.size()));
+        ComplexMatrix L = C.copy();
+        L.add(new double[]{-1, 0}, localHVVH);
+        rate = Utils.log2(ComplexMatrices.eye(getNumAntennas()).add(localHVVH.mult(L.inverse()))
+                .det2()) / 2.0;
+    }
+
     /**
      * Calculate rx precoding matrix for
      */
@@ -729,13 +758,9 @@ public class UE extends Entity {
         // H.hermitianTranspose(new DenseComplexMatrix(H.numColumns(),
         // H.numRows()))).trace()[0];
         /**
-         *  0dB, 0.5
-         *  5dB, 0.28117066259517454
-         * 10dB, 0.15811388300841894
-         * 15dB, 0.08891397050194613
-         * 20dB, 0.05
-         * 25dB, 0.028117066259517452
-         * 30dB, 0.015811388300841896
+         * 0dB, 0.5 5dB, 0.28117066259517454 10dB, 0.15811388300841894 15dB,
+         * 0.08891397050194613 20dB, 0.05 25dB, 0.028117066259517452 30dB,
+         * 0.015811388300841896
          */
         double lambda = 0.5;
         lambdaMap.put(q, lambda);

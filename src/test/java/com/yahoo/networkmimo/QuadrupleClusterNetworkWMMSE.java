@@ -8,6 +8,9 @@ public class QuadrupleClusterNetworkWMMSE {
     @Test
     public void testIt() {
         Network network = new Network(1000);
+        Network.epsilon = 1e-1;
+        Network.maxNumIterations = Integer.MAX_VALUE;
+        Entity.csiMode = "S-WMMSE";
         int Q = 20;
         int M = 4;
         int I = 40;
@@ -27,14 +30,14 @@ public class QuadrupleClusterNetworkWMMSE {
 
         double totalSumRate = 0.0;
         double totalIterations = 0.0;
-        int numCases = 20;
+        int numCases = 100;
         for (int i = 0; i < numCases; i++) {
-            network.refresh();
+            network.refreshWMMSE();
             network.optimizeWMMSE();
             network.brownianMotion(2000 / sqrt(3));
             System.out.println("Case #" + (i + 1) + ": " + network.getSumRate());
             totalSumRate += network.getSumRate();
-            totalIterations += BaseStation.iteration - 1;
+            totalIterations += BaseStation.iteration;
         }
         System.out.println("Avg sum rate: " + totalSumRate / numCases);
         System.out.println("Avg iterations: " + totalIterations / numCases);
